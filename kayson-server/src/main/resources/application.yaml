@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: kayson-server
+  profiles:
+    active: local
+
+kayson:
+  info:
+    version: 1.0.0
+    base-package: cn.zjh.kayson

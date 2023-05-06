@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <modules>
+        <module>kayson-module-infra-api</module>
+        <module>kayson-module-infra-biz</module>
+    </modules>
+    <parent>
+        <artifactId>kayson</artifactId>
+        <groupId>cn.zjh.boot</groupId>
+        <version>${revision}</version>
+    </parent>
+    <artifactId>kayson-module-infra</artifactId>
+    <packaging>pom</packaging>
+
+    <name>${project.artifactId}</name>
+    <description>
+        infra 模块，主要提供两块能力：
+        1. 基础设施的运维与管理，支撑上层的通用与核心业务。
+        2. 研发工具，提升研发效率与质量。
+    </description>
+
+</project>
