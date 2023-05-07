@@ -3,8 +3,30 @@ spring:
     name: kayson-server
   profiles:
     active: local
+    
+--- #################### 接口文档配置 ####################
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
 
 kayson:
   info:
     version: 1.0.0
     base-package: cn.zjh.kayson
+  swagger:
+    title: kayson后台管理系统
+    description: 提供管理后台、用户 App 的所有功能
+    version: ${kayson.info.version}
+    url: https://github.com/jh-zhou0/kayson
+    email: 1525090646@qq.com
+    license: MIT
+    license-url: https://github.com/jh-zhou0/kayson
