@@ -1,3 +1,4 @@
+cn.zjh.kayson.framework.jackson.config.KaysonJacksonAutoConfiguration
 com.github.xiaoymin.knife4j.spring.configuration.Knife4jAutoConfiguration
 cn.zjh.kayson.framework.swagger.config.KaysonSwaggerAutoConfiguration
 cn.zjh.kayson.framework.web.config.KaysonWebAutoConfiguration

@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+
 /**
  * @author zjh - kayson
  */
@@ -25,5 +27,11 @@ public class TestController {
     @GetMapping("/exception")
     public CommonResult<String> exception() {
         throw new RuntimeException("test exception");
+    }
+    
+    @Operation(summary = "测试LocalDateTime序列化")
+    @GetMapping("/getTime")
+    public CommonResult<LocalDateTime> getTime() {
+        return CommonResult.success(LocalDateTime.now());
     }
 }
