@@ -28,5 +28,11 @@
             <artifactId>kayson-module-infra-api</artifactId>
             <version>${revision}</version>
         </dependency>
+
+        <!-- validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
     </dependencies>
 </project>
