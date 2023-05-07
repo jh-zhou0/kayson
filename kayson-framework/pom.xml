@@ -6,6 +6,7 @@
     <modules>
         <module>kayson-common</module>
         <module>kayson-spring-boot-starter-web</module>
+        <module>kayson-spring-boot-starter-security</module>
     </modules>
     <parent>
         <artifactId>kayson</artifactId>
