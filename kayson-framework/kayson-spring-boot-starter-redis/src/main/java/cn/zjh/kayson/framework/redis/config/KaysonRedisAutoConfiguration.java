@@ -6,17 +6,22 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
+import javax.annotation.Resource;
+
 /**
  * @author zjh - kayson
  */
 @AutoConfiguration
 public class KaysonRedisAutoConfiguration {
 
+    @Resource
+    private RedisConnectionFactory factory;
+    
     /**
      * 创建 RedisTemplate Bean，使用 JSON 序列化方式
      */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+    public RedisTemplate<String, Object> redisTemplate() {
         // 创建 RedisTemplate 对象
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         // 设置 RedisConnection 工厂。😈 它就是实现多种 Java Redis 客户端接入的秘密工厂。
