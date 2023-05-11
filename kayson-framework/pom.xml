@@ -7,6 +7,8 @@
         <module>kayson-common</module>
         <module>kayson-spring-boot-starter-web</module>
         <module>kayson-spring-boot-starter-security</module>
+        <module>kayson-spring-boot-starter-mybatis</module>
+        <module>kayson-spring-boot-starter-redis</module>
     </modules>
     <parent>
         <artifactId>kayson</artifactId>

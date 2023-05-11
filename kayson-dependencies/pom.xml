@@ -93,6 +93,18 @@
 
             <!-- Web 相关 -->
             <dependency>
+                <groupId>cn.zjh.boot</groupId>
+                <artifactId>kayson-spring-boot-starter-web</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.zjh.boot</groupId>
+                <artifactId>kayson-spring-boot-starter-security</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            
+            <dependency>
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
@@ -101,6 +113,52 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-ui</artifactId>
                 <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- DB 相关 -->
+            <dependency>
+                <groupId>cn.zjh.boot</groupId>
+                <artifactId>kayson-spring-boot-starter-mybatis</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-generator</artifactId> <!-- 代码生成器，使用它解析表结构 -->
+                <version>${mybatis-plus-generator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>dynamic-datasource-spring-boot-starter</artifactId> <!-- 多数据源 -->
+                <version>${dynamic-datasource.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.yulichang</groupId>
+                <artifactId>mybatis-plus-join-boot-starter</artifactId>
+                <version>${mybatis-plus-join-boot-starter.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.zjh.boot</groupId>
+                <artifactId>kayson-spring-boot-starter-redis</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redisson.version}</version>
             </dependency>
 
             <!-- 工具类相关 -->

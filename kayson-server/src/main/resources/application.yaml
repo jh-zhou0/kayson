@@ -3,8 +3,18 @@ spring:
     name: kayson-server
   profiles:
     active: local
-    
---- #################### 接口文档配置 ####################
+  main:
+    allow-circular-references: true # 允许循环依赖，因为项目是三层架构，无法避免这个情况。
+
+  # Jackson 配置项
+  jackson:
+    serialization:
+      write-dates-as-timestamps: true # 设置 Date 的格式，使用时间戳
+      write-date-timestamps-as-nanoseconds: false # 设置不使用 nanoseconds 的格式。例如说 1611460870.401，而是直接 1611460870401
+      write-durations-as-timestamps: true # 设置 Duration 的格式，使用时间戳
+      fail-on-empty-beans: false # 允许序列化无属性的 Bean
+
+# 接口文档配置
 springdoc:
   api-docs:
     enabled: true
@@ -18,6 +28,20 @@ knife4j:
   setting:
     language: zh_cn
 
+# MyBatis Plus 的配置项
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true # 虽然默认为 true ，但是还是显示去指定下。
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+      logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+  type-aliases-package: ${kayson.info.base-package}.module.*.dal.dataobject
+  encryptor:
+    password: XDV71a+xqStEA3WH # 加解密的秘钥，可使用 https://www.imaegoo.com/2020/aes-key-generator/ 网站生成
+    
+# 自定义 kayson 配置
 kayson:
   info:
     version: 1.0.0

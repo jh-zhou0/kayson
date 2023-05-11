@@ -1,0 +1,2 @@
+cn.zjh.kayson.framework.datasource.config.KaysonDataSourceAutoConfiguration
+cn.zjh.kayson.framework.mybatis.config.KaysonMybatisAutoConfiguration

@@ -29,6 +29,17 @@
             <version>${revision}</version>
         </dependency>
 
+        <!-- DB 相关 -->
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-spring-boot-starter-mybatis</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-spring-boot-starter-redis</artifactId>
+        </dependency>
+
         <!-- validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
