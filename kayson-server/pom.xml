@@ -44,11 +44,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>cn.zjh.boot</groupId>
-            <artifactId>kayson-spring-boot-starter-web</artifactId>
-        </dependency>
+        
     </dependencies>
 
     <build>

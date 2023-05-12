@@ -28,6 +28,12 @@
             <artifactId>kayson-module-infra-api</artifactId>
             <version>${revision}</version>
         </dependency>
+        
+        <!-- Web 相关 -->
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-spring-boot-starter-web</artifactId>
+        </dependency>
 
         <!-- DB 相关 -->
         <dependency>
