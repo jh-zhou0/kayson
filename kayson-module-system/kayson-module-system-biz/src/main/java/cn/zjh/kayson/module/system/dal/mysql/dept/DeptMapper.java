@@ -2,7 +2,7 @@ package cn.zjh.kayson.module.system.dal.mysql.dept;
 
 import cn.zjh.kayson.framework.mybatis.core.mapper.BaseMapperX;
 import cn.zjh.kayson.framework.mybatis.core.query.LambdaQueryWrapperX;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptListReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptListReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import org.apache.ibatis.annotations.Mapper;
 

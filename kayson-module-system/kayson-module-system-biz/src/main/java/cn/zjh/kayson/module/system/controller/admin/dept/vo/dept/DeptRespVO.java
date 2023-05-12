@@ -1,4 +1,4 @@
-package cn.zjh.kayson.module.system.controller.admin.dept.vo;
+package cn.zjh.kayson.module.system.controller.admin.dept.vo.dept;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

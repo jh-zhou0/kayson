@@ -1,8 +1,8 @@
 package cn.zjh.kayson.module.system.service.dept;
 
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptListReqVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptListReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 
 import java.util.List;

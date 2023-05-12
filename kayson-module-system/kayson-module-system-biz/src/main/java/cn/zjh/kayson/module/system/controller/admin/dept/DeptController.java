@@ -1,10 +1,10 @@
 package cn.zjh.kayson.module.system.controller.admin.dept;
 
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptListReqVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptRespVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptListReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptRespVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptUpdateReqVO;
 import cn.zjh.kayson.module.system.convert.dept.DeptConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.service.dept.DeptService;

@@ -1,8 +1,8 @@
 package cn.zjh.kayson.module.system.convert.dept;
 
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptRespVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.DeptUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptRespVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;

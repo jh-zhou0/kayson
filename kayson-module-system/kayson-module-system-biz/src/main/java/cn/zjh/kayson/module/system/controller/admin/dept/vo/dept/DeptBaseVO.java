@@ -1,4 +1,4 @@
-package cn.zjh.kayson.module.system.controller.admin.dept.vo;
+package cn.zjh.kayson.module.system.controller.admin.dept.vo.dept;
 
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.validation.InEnum;
