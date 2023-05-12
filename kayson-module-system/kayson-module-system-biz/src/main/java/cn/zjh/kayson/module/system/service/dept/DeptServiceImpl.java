@@ -2,6 +2,7 @@ package cn.zjh.kayson.module.system.service.dept;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
+import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptListReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptUpdateReqVO;
@@ -13,9 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
@@ -82,6 +81,15 @@ public class DeptServiceImpl implements DeptService{
         return deptMapper.selectList(reqVO);
     }
 
+    @Override
+    public Map<Long, DeptDO> getDeptMap(Collection<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return Collections.emptyMap();
+        }
+        List<DeptDO> deptDOList = deptMapper.selectBatchIds(ids);
+        return CollectionUtils.convertMap(deptDOList, DeptDO::getId);
+    }
+
     private void validateForCreateOrUpdate(Long id, Long parentId, String name) {
         // 校验自己存在
         validateDeptExists(id);
@@ -142,7 +150,8 @@ public class DeptServiceImpl implements DeptService{
         }
     }
 
-    private List<DeptDO> getDeptChildrenById(Long id) {
+    @Override
+    public List<DeptDO> getDeptChildrenById(Long id) {
         if (id == null) {
             return Collections.emptyList();
         }

@@ -1,21 +1,24 @@
 package cn.zjh.kayson.module.system.service.user;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserUpdateReqVO;
 import cn.zjh.kayson.module.system.convert.user.UserConvert;
+import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
+import cn.zjh.kayson.module.system.dal.dataobject.dept.UserPostDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
+import cn.zjh.kayson.module.system.dal.mysql.dept.UserPostMapper;
 import cn.zjh.kayson.module.system.dal.mysql.user.AdminUserMapper;
+import cn.zjh.kayson.module.system.service.dept.DeptService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
@@ -31,6 +34,12 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Resource
     private AdminUserMapper adminUserMapper;
     
+    @Resource
+    private DeptService deptService;
+    
+    @Resource
+    private UserPostMapper userPostMapper;
+    
     @Override
     public Long createUser(UserCreateReqVO reqVO) {
         // 校验正确性
@@ -41,7 +50,12 @@ public class AdminUserServiceImpl implements AdminUserService {
         user.setStatus(CommonStatusEnum.ENABLE.getValue()); // 默认开启
         user.setPassword(reqVO.getPassword()); // TODO：加密密码
         adminUserMapper.insert(user);
-        // TODO: 插入关联岗位
+        // 插入关联岗位
+        if (CollUtil.isNotEmpty(user.getPostIds())) {
+            List<UserPostDO> userPostDOList = CollectionUtils.convertList(user.getPostIds(), 
+                    postId -> new UserPostDO().setUserId(user.getId()).setPostId(postId));
+            userPostMapper.insertBatch(userPostDOList);
+        }
         return user.getId();
     }
 
@@ -53,7 +67,27 @@ public class AdminUserServiceImpl implements AdminUserService {
         // 更新用户
         AdminUserDO updateObj = UserConvert.INSTANCE.convert(reqVO);
         adminUserMapper.updateById(updateObj);
-        // TODO: 更新岗位
+        // 更新岗位
+        updateUserPost(reqVO, updateObj);
+    }
+
+    private void updateUserPost(UserUpdateReqVO reqVO, AdminUserDO updateObj) {
+        Long userId = reqVO.getId();
+        // 获取当前用户对应的岗位
+        List<UserPostDO> userPostDOList = userPostMapper.selectListByUserId(userId);
+        Set<Long> dbPostIds = CollectionUtils.convertSet(userPostDOList, UserPostDO::getId);
+        // 计算新增和删除的岗位编号
+        Set<Long> postIds = updateObj.getPostIds();
+        Collection<Long> createPostIds = CollUtil.subtract(postIds, dbPostIds);
+        Collection<Long> deletePostIds = CollUtil.subtract(dbPostIds, postIds);
+        // 执行新增和删除。对于已经授权的菜单，不用做任何处理
+        if (CollUtil.isNotEmpty(createPostIds)) {
+            userPostMapper.insertBatch(CollectionUtils.convertList(createPostIds, 
+                    postId -> new UserPostDO().setUserId(userId).setPostId(postId)));
+        }
+        if (CollUtil.isNotEmpty(deletePostIds)) {
+            userPostMapper.deleteByUserIdAndPostId(userId, deletePostIds);
+        }
     }
 
     @Override
@@ -62,7 +96,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         // 删除用户
         adminUserMapper.deleteById(id);
         // TODO: 删除用户关联数据
-        // TODO: 删除用户岗位
+        // 删除用户岗位
+        userPostMapper.deleteByUserId(id);
     }
 
     @Override
@@ -110,8 +145,9 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (deptId == null) {
             return Collections.emptySet();
         }
-        // TODO: 查询子部门
-        Set<Long> deptIds = new HashSet<>();
+        // 查询子部门
+        List<DeptDO> children = deptService.getDeptChildrenById(deptId);
+        Set<Long> deptIds = CollectionUtils.convertSet(children, DeptDO::getId);
         deptIds.add(deptId); // 包括自身
         return deptIds;
     }

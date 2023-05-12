@@ -5,7 +5,9 @@ import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptListReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 部门 Service 接口
@@ -51,4 +53,20 @@ public interface DeptService {
      * @return 部门列表
      */
     List<DeptDO> getDeptList(DeptListReqVO reqVO);
+
+    /**
+     * 获得指定编号的部门 Map
+     *
+     * @param ids 部门编号数组
+     * @return 部门 Map
+     */
+    Map<Long, DeptDO> getDeptMap(Collection<Long> ids);
+
+    /**
+     * 获取指定部门编号的子部门
+     * 
+     * @param id 部门编号
+     * @return 子部门
+     */
+    List<DeptDO> getDeptChildrenById(Long id);
 }

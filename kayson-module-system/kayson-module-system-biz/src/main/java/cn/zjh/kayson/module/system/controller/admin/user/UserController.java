@@ -4,9 +4,12 @@ import cn.hutool.core.collection.CollUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.*;
 import cn.zjh.kayson.module.system.convert.user.UserConvert;
+import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
+import cn.zjh.kayson.module.system.service.dept.DeptService;
 import cn.zjh.kayson.module.system.service.user.AdminUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,6 +21,8 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static cn.zjh.kayson.framework.common.pojo.CommonResult.success;
 
@@ -32,6 +37,9 @@ public class UserController {
 
     @Resource
     private AdminUserService adminUserService;
+    
+    @Resource
+    private DeptService deptService;
 
     @PostMapping("/create")
     @Operation(summary = "新增用户")
@@ -60,8 +68,9 @@ public class UserController {
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
     public CommonResult<UserRespVO> getUser(@RequestParam("id") Long id) {
         AdminUserDO user = adminUserService.getUser(id);
-        // TODO: 获得部门数据，设置到 UserPageItemRespVO 中
-        return success(UserConvert.INSTANCE.convert(user).setDept(null));
+        // 获得部门数据，设置到 UserPageItemRespVO 中
+        DeptDO dept = deptService.getDept(user.getDeptId());
+        return success(UserConvert.INSTANCE.convert(user).setDept(UserConvert.INSTANCE.convert(dept)));
     }
     
     @GetMapping("/page")
@@ -73,11 +82,15 @@ public class UserController {
             return success(new PageResult<>(pageResult.getTotal())); // 返回空
         }
         
-        // TODO: 获取部门数据
+        // 获取部门数据
+        Set<Long> deptIds = CollectionUtils.convertSet(pageResult.getList(), AdminUserDO::getDeptId);
+        Map<Long, DeptDO> deptMap = deptService.getDeptMap(deptIds);
+        // 拼接结果返回
         List<UserPageItemRespVO> userList = new ArrayList<>(pageResult.getList().size());
         pageResult.getList().forEach(user -> {
             UserPageItemRespVO respVO = UserConvert.INSTANCE.convert(user);
-            // TODO：拼接部门数据
+            // 拼接部门数据
+            respVO.setDept(UserConvert.INSTANCE.convert(deptMap.get(user.getDeptId())));
             userList.add(respVO);
         });
         return success(new PageResult<>(userList, pageResult.getTotal()));
