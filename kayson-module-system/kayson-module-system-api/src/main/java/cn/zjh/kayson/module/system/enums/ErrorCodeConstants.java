@@ -59,4 +59,13 @@ public interface ErrorCodeConstants {
     ErrorCode POST_NOT_ENABLE = new ErrorCode(1002005001, "岗位({}) 不处于开启状态，不允许选择");
     ErrorCode POST_NAME_DUPLICATE = new ErrorCode(1002005002, "已经存在该名字的岗位");
     ErrorCode POST_CODE_DUPLICATE = new ErrorCode(1002005003, "已经存在该标识的岗位");
+
+    // ========== OAuth2 客户端 1002020000 =========
+    ErrorCode OAUTH2_CLIENT_NOT_EXISTS = new ErrorCode(1002020000, "OAuth2 客户端不存在");
+    ErrorCode OAUTH2_CLIENT_EXISTS = new ErrorCode(1002020001, "OAuth2 客户端编号已存在");
+    ErrorCode OAUTH2_CLIENT_DISABLE = new ErrorCode(1002020002, "OAuth2 客户端已禁用");
+    ErrorCode OAUTH2_CLIENT_AUTHORIZED_GRANT_TYPE_NOT_EXISTS = new ErrorCode(1002020003, "不支持该授权类型");
+    ErrorCode OAUTH2_CLIENT_SCOPE_OVER = new ErrorCode(1002020004, "授权范围过大");
+    ErrorCode OAUTH2_CLIENT_REDIRECT_URI_NOT_MATCH = new ErrorCode(1002020005, "无效 redirect_uri: {}");
+    ErrorCode OAUTH2_CLIENT_CLIENT_SECRET_ERROR = new ErrorCode(1002020006, "无效 client_secret: {}");
 }
