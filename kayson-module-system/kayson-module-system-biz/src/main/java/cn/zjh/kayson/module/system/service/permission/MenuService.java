@@ -51,4 +51,11 @@ public interface MenuService {
      * @return 菜单列表
      */
     List<MenuDO> getMenuList(MenuListReqVO reqVO);
+
+    /**
+     * 获得所有菜单列表
+     *
+     * @return 菜单列表
+     */
+    List<MenuDO> getMenuList();
 }

@@ -1,0 +1,60 @@
+package cn.zjh.kayson.module.system.controller.admin.permission;
+
+import cn.zjh.kayson.framework.common.pojo.CommonResult;
+import cn.zjh.kayson.module.system.controller.admin.permission.vo.permission.PermissionAssignRoleMenuReqVO;
+import cn.zjh.kayson.module.system.controller.admin.permission.vo.permission.PermissionAssignUserRoleReqVO;
+import cn.zjh.kayson.module.system.service.permission.PermissionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import java.util.Set;
+
+import static cn.zjh.kayson.framework.common.pojo.CommonResult.success;
+
+/**
+ * 权限 Controller，提供赋予用户、角色的权限的 API 接口
+ * 
+ * @author zjh - kayson
+ */
+@Tag(name = "管理后台 - 权限")
+@RestController
+@RequestMapping("/system/permission")
+public class PermissionController {
+    
+    @Resource
+    private PermissionService permissionService;
+
+    @PostMapping("/assign-user-role")
+    @Operation(summary = "赋予用户角色")
+    public CommonResult<Boolean> assignUserRole(@Validated @RequestBody PermissionAssignUserRoleReqVO reqVO) {
+        permissionService.assignUserRole(reqVO.getUserId(), reqVO.getRoleIds());
+        return success(true);
+    }
+
+    @GetMapping("/list-user-roles")
+    @Operation(summary = "获得管理员拥有的角色编号列表")
+    @Parameter(name = "userId", description = "用户编号", required = true)
+    public CommonResult<Set<Long>> listAdminRoles(@RequestParam("userId") Long userId) {
+        return success(permissionService.getUserRoleIds(userId));
+    }
+
+    @PostMapping("/assign-role-menu")
+    @Operation(summary = "赋予角色菜单")
+    public CommonResult<Boolean> assignRoleMenu(@Validated @RequestBody PermissionAssignRoleMenuReqVO reqVO) {
+        // 执行菜单的分配
+        permissionService.assignRoleMenu(reqVO.getRoleId(), reqVO.getMenuIds());
+        return success(true);
+    }
+
+    @GetMapping("/list-role-resources")
+    @Operation(summary = "获得角色拥有的菜单编号")
+    @Parameter(name = "roleId", description = "角色编号", required = true)
+    public CommonResult<Set<Long>> listRoleMenus(Long roleId) {
+        return success(permissionService.getRoleMenuIds(roleId));
+    }
+    
+}

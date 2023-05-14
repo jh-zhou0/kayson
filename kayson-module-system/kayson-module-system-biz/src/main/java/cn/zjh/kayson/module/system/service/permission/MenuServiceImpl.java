@@ -71,6 +71,11 @@ public class MenuServiceImpl implements MenuService {
         return menuMapper.selectList(reqVO);
     }
 
+    @Override
+    public List<MenuDO> getMenuList() {
+        return menuMapper.selectList();
+    }
+
     private void validateForCreateOrUpdate(Long id, Long parentId, String name) {
         // 校验存在
         validateMenuIdExist(id);
