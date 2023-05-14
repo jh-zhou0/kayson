@@ -78,4 +78,30 @@ public interface AdminUserService {
      * @return 用户们
      */
     List<AdminUserDO> getUserListByStatus(Integer status);
+
+    /**
+     * 查询用户
+     * 
+     * @param username 用户名
+     * @return 用户
+     */
+    AdminUserDO getUserByUsername(String username);
+
+    /**
+     * 判断密码是否匹配
+     * 
+     * @param password 未加密的密码
+     * @param encodedPassword 加密后的密码
+     * @return 是否匹配
+     */
+    boolean isPasswordMatch(String password, String encodedPassword);
+
+    /**
+     * 更新用户的最后登陆信息
+     *
+     * @param id 用户编号
+     * @param loginIp 登陆 IP
+     */
+    void updateUserLogin(Long id, String loginIp);
+    
 }

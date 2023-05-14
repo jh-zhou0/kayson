@@ -18,6 +18,7 @@ import cn.zjh.kayson.module.system.service.dept.DeptService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
@@ -133,6 +134,22 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     public List<AdminUserDO> getUserListByStatus(Integer status) {
         return adminUserMapper.selectListByStatus(status);
+    }
+
+    @Override
+    public AdminUserDO getUserByUsername(String username) {
+        return adminUserMapper.selectByUsername(username);
+    }
+
+    @Override
+    public boolean isPasswordMatch(String password, String encodedPassword) {
+        // TODO: 密码暂时未加密，先直接判断是否相等
+        return password.equals(encodedPassword);
+    }
+
+    @Override
+    public void updateUserLogin(Long id, String loginIp) {
+        adminUserMapper.updateById(new AdminUserDO().setId(id).setLoginIp(loginIp).setLoginDate(LocalDateTime.now()));
     }
 
     /**

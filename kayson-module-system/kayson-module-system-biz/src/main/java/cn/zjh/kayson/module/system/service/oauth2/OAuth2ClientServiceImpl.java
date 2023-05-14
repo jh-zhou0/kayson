@@ -1,5 +1,9 @@
 package cn.zjh.kayson.module.system.service.oauth2;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.module.system.controller.admin.oauth2.vo.OAuth2ClientCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.oauth2.vo.OAuth2ClientPageReqVO;
@@ -10,6 +14,7 @@ import cn.zjh.kayson.module.system.dal.mysql.oauth2.OAuth2ClientMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Collection;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
@@ -62,6 +67,39 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
     @Override
     public PageResult<OAuth2ClientDO> getOAuth2ClientPage(OAuth2ClientPageReqVO pageReqVO) {
         return oAuth2ClientMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public OAuth2ClientDO validOAuthClient(String clientId, String clientSecret, String authorizedGrantType, 
+                                           Collection<String> scopes, String redirectUri) {
+        // 校验客户端存在、且开启
+        OAuth2ClientDO client = oAuth2ClientMapper.selectByClientId(clientId);
+        if (client == null) {
+            throw exception(OAUTH2_CLIENT_NOT_EXISTS);
+        }
+        if (ObjectUtil.notEqual(client.getStatus(), CommonStatusEnum.ENABLE.getValue())) {
+            throw exception(OAUTH2_CLIENT_DISABLE);
+        }
+        // 校验客户端密钥
+        if (StrUtil.isNotEmpty(clientSecret) && ObjectUtil.notEqual(client.getSecret(), clientSecret)) {
+            throw exception(OAUTH2_CLIENT_CLIENT_SECRET_ERROR);
+        }
+        // 校验授权方式
+        if (StrUtil.isNotEmpty(authorizedGrantType) 
+                && !CollUtil.contains(client.getAuthorizedGrantTypes(), authorizedGrantType)) {
+            throw exception(OAUTH2_CLIENT_AUTHORIZED_GRANT_TYPE_NOT_EXISTS);
+        }
+        // 校验授权范围
+        if (CollUtil.isNotEmpty(scopes) && !CollUtil.containsAll(client.getScopes(), scopes)) {
+            throw exception(OAUTH2_CLIENT_SCOPE_OVER);
+        }
+        // 校验回调地址
+        String redirectUris = client.getRedirectUris().toString();
+        if (StrUtil.isNotEmpty(redirectUri) 
+                && !StrUtil.startWithAny(redirectUri, redirectUris.substring(1, redirectUri.length() - 1))) {
+            throw exception(OAUTH2_CLIENT_REDIRECT_URI_NOT_MATCH, redirectUri);
+        }
+        return client;
     }
 
     private void validateOAuth2ClientExists(Long id) {
