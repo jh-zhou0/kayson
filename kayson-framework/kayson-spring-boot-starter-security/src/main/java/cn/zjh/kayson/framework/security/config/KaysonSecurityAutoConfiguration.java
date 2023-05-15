@@ -7,6 +7,7 @@ import cn.zjh.kayson.framework.security.core.handler.AuthenticationEntryPointImp
 import cn.zjh.kayson.framework.security.core.service.SecurityFrameworkService;
 import cn.zjh.kayson.framework.security.core.service.SecurityFrameworkServiceImpl;
 import cn.zjh.kayson.framework.web.core.handler.GlobalExceptionHandler;
+import cn.zjh.kayson.module.system.api.oauth2.OAuth2TokenApi;
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -60,8 +61,9 @@ public class KaysonSecurityAutoConfiguration {
      * Token 认证过滤器 Bean
      */
     @Bean
-    public TokenAuthenticationFilter tokenAuthenticationFilter(GlobalExceptionHandler globalExceptionHandler) {
-        return new TokenAuthenticationFilter(securityProperties, globalExceptionHandler);
+    public TokenAuthenticationFilter tokenAuthenticationFilter(GlobalExceptionHandler globalExceptionHandler,
+                                                               OAuth2TokenApi oAuth2TokenApi) {
+        return new TokenAuthenticationFilter(securityProperties, globalExceptionHandler, oAuth2TokenApi);
     }
 
     @Bean("ss") // 使用 Spring Security 的缩写，方便使用

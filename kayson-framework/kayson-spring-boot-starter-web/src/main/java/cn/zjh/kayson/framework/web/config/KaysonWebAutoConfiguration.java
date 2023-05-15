@@ -77,7 +77,7 @@ public class KaysonWebAutoConfiguration implements WebMvcConfigurer {
      * 创建 CorsFilter Bean，解决跨域问题
      */
     @Bean
-    public FilterRegistrationBean<CorsFilter> corsFilter() {
+    public FilterRegistrationBean<CorsFilter> corsFilterBean() {
         // 创建 CorsConfiguration 对象
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);

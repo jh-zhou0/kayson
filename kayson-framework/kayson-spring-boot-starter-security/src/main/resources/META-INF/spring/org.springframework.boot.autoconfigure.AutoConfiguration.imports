@@ -1,0 +1,2 @@
+cn.zjh.kayson.framework.security.config.KaysonSecurityAutoConfiguration
+cn.zjh.kayson.framework.security.config.KaysonWebSecurityConfigurerAdapter

@@ -20,12 +20,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.web.util.pattern.PathPattern;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 自定义的 Spring Security 配置适配器实现
@@ -159,10 +161,11 @@ public class KaysonWebSecurityConfigurerAdapter {
                 continue;
             }
             // TODO: 下面这句话的意思
-            if (entry.getKey().getPatternsCondition() == null) {
+            if (entry.getKey().getPathPatternsCondition() == null) {
                 continue;
             }
-            Set<String> urls = entry.getKey().getPatternsCondition().getPatterns();
+            Set<PathPattern> pathPatterns = entry.getKey().getPathPatternsCondition().getPatterns();
+            Set<String> urls = pathPatterns.stream().map(PathPattern::getPatternString).collect(Collectors.toSet());
             // 根据请求方法，添加到 result 结果
             entry.getKey().getMethodsCondition().getMethods().forEach(requestMethod -> {
                 switch (requestMethod) {

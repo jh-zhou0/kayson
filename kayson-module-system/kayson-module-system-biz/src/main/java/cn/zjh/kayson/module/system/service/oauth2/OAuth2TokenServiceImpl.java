@@ -1,6 +1,7 @@
 package cn.zjh.kayson.module.system.service.oauth2;
 
 import cn.hutool.core.util.IdUtil;
+import cn.zjh.kayson.framework.common.exception.enums.GlobalErrorCodeConstants;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2RefreshTokenDO;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception0;
 
 /**
  * OAuth2.0 Token Service 实现类
@@ -39,6 +42,33 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
         OAuth2RefreshTokenDO refreshTokenDO = createOAuth2RefreshToken(userId, userType, client, scopes);
         // 创建访问令牌
         return createOAuth2AccessToken(refreshTokenDO, client);
+    }
+
+    @Override
+    public OAuth2AccessTokenDO getAccessToken(String accessToken) {
+        // 优先从 Redis 中获取
+        OAuth2AccessTokenDO accessTokenDO = oAuth2AccessTokenRedisDAO.get(accessToken);
+        if (accessTokenDO != null) {
+            return accessTokenDO;
+        }
+        // 获取不到，从 MySQL 中获取
+        accessTokenDO = oAuth2AccessTokenMapper.selectByAccessToken(accessToken);
+        if (accessTokenDO != null && LocalDateTime.now().isBefore(accessTokenDO.getExpiresTime())) {
+            oAuth2AccessTokenRedisDAO.set(accessTokenDO);
+        }
+        return accessTokenDO;
+    }
+
+    @Override
+    public OAuth2AccessTokenDO checkAccessToken(String accessToken) {
+        OAuth2AccessTokenDO accessTokenDO = getAccessToken(accessToken);
+        if (accessTokenDO == null) {
+            throw exception0(GlobalErrorCodeConstants.UNAUTHORIZED.getCode(), "访问令牌不存在");
+        }
+        if (LocalDateTime.now().isAfter(accessTokenDO.getExpiresTime())) {
+            throw exception0(GlobalErrorCodeConstants.UNAUTHORIZED.getCode(), "访问令牌已过期");
+        }
+        return accessTokenDO;
     }
 
     private OAuth2AccessTokenDO createOAuth2AccessToken(OAuth2RefreshTokenDO refreshTokenDO, OAuth2ClientDO client) {
