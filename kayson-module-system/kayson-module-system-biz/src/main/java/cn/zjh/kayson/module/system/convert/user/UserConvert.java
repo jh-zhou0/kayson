@@ -1,10 +1,13 @@
 package cn.zjh.kayson.module.system.convert.user;
 
+import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileRespVO;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserPageItemRespVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserSimpleRespVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
+import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -27,6 +30,13 @@ public interface UserConvert {
     
     UserPageItemRespVO.Dept convert(DeptDO bean);
 
-    List<UserSimpleRespVO> convertList04(List<AdminUserDO> list);
-    
+    List<UserSimpleRespVO> convertList(List<AdminUserDO> list);
+
+    UserProfileRespVO convert02(AdminUserDO user);
+
+    List<UserProfileRespVO.Role> convertList02(List<RoleDO> roleList);
+
+    UserProfileRespVO.Dept convert02(DeptDO deptDO);
+
+    AdminUserDO convert02(UserProfileUpdateReqVO reqVO);
 }

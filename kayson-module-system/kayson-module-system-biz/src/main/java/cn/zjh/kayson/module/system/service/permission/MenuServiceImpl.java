@@ -11,7 +11,6 @@ import cn.zjh.kayson.module.system.enums.permission.MenuTypeEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +28,9 @@ public class MenuServiceImpl implements MenuService {
     
     @Resource
     private MenuMapper menuMapper;
+    
+    @Resource
+    private PermissionService permissionService;
     
     @Override
     public Long createMenu(MenuCreateReqVO reqVO) {
@@ -61,7 +63,8 @@ public class MenuServiceImpl implements MenuService {
         validateMenuIdExist(id);
         // 删除菜单
         menuMapper.deleteById(id);
-        // TODO: 删除授予给角色的权限
+        // 删除授予给角色的权限
+        permissionService.processMenuDeleted(id);
     }
 
     @Override

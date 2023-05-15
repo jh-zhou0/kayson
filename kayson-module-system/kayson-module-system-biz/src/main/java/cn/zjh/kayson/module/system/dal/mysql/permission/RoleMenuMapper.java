@@ -23,5 +23,13 @@ public interface RoleMenuMapper extends BaseMapperX<RoleMenuDO> {
                 .eq(RoleMenuDO::getRoleId, roleId)
                 .in(RoleMenuDO::getMenuId, deleteMenuIds));
     }
+
+    default void deleteListByMenuId(Long menuId) {
+        delete(new LambdaQueryWrapperX<RoleMenuDO>().eq(RoleMenuDO::getMenuId, menuId));
+    }
+
+    default void deleteListByRoleId(Long roleId) {
+        delete(new LambdaQueryWrapperX<RoleMenuDO>().eq(RoleMenuDO::getRoleId, roleId));
+    }
     
 }

@@ -1,12 +1,15 @@
 package cn.zjh.kayson.module.system.service.user;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 
 import javax.validation.Valid;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -103,5 +106,29 @@ public interface AdminUserService {
      * @param loginIp 登陆 IP
      */
     void updateUserLogin(Long id, String loginIp);
+
+    /**
+     * 修改用户个人信息
+     *
+     * @param id 用户编号
+     * @param reqVO 用户个人信息
+     */
+    void updateUserProfile(Long id, UserProfileUpdateReqVO reqVO);
+
+    /**
+     * 修改用户个人密码
+     *
+     * @param id 用户编号
+     * @param reqVO 更新用户个人密码
+     */
+    void updateUserPassword(Long id, @Valid UserProfileUpdatePasswordReqVO reqVO);
+
+    /**
+     * 更新用户头像
+     *
+     * @param id         用户 id
+     * @param avatarFile 头像文件
+     */
+    String updateUserAvatar(Long id, InputStream avatarFile) throws Exception;
     
 }

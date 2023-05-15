@@ -68,4 +68,9 @@ public interface ErrorCodeConstants {
     ErrorCode OAUTH2_CLIENT_SCOPE_OVER = new ErrorCode(1002020004, "授权范围过大");
     ErrorCode OAUTH2_CLIENT_REDIRECT_URI_NOT_MATCH = new ErrorCode(1002020005, "无效 redirect_uri: {}");
     ErrorCode OAUTH2_CLIENT_CLIENT_SECRET_ERROR = new ErrorCode(1002020006, "无效 client_secret: {}");
+
+    // ========= 文件相关 1001003000=================
+    ErrorCode FILE_PATH_EXISTS = new ErrorCode(1001003000, "文件路径已存在");
+    ErrorCode FILE_NOT_EXISTS = new ErrorCode(1001003001, "文件不存在");
+    ErrorCode FILE_IS_EMPTY = new ErrorCode(1001003002, "文件为空");
 }

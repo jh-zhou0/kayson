@@ -54,4 +54,25 @@ public interface PermissionService {
      * @return 菜单列表
      */
     List<MenuDO> getRoleMenuList(Collection<RoleDO> roleList);
+
+    /**
+     * 处理用户删除时，删除关联授权数据
+     *
+     * @param userId 用户编号
+     */
+    void processUserDeleted(Long userId);
+
+    /**
+     * 处理菜单删除时，删除关联授权数据
+     *
+     * @param menuId 菜单编号
+     */
+    void processMenuDeleted(Long menuId);
+
+    /**
+     * 处理角色删除时，删除关联授权数据
+     *
+     * @param roleId 角色编号
+     */
+    void processRoleDeleted(Long roleId);
 }

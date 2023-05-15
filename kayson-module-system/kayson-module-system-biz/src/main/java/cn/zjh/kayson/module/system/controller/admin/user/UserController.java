@@ -116,6 +116,6 @@ public class UserController {
         // 获用户列表，只要开启状态的
         List<AdminUserDO> list = adminUserService.getUserListByStatus(CommonStatusEnum.ENABLE.getValue());
         // 排序后，返回给前端
-        return success(UserConvert.INSTANCE.convertList04(list));
+        return success(UserConvert.INSTANCE.convertList(list));
     }
 }

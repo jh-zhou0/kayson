@@ -118,4 +118,20 @@ public class PermissionServiceImpl implements PermissionService {
         });
         return menuService.getMenuList(menuIds);
     }
+
+    @Override
+    public void processUserDeleted(Long userId) {
+        userRoleMapper.deleteListByUserId(userId);
+    }
+
+    @Override
+    public void processMenuDeleted(Long menuId) {
+        roleMenuMapper.deleteListByMenuId(menuId);
+    }
+
+    @Override
+    public void processRoleDeleted(Long roleId) {
+        userRoleMapper.deleteListByRoleId(roleId);
+        roleMenuMapper.deleteListByRoleId(roleId);
+    }
 }

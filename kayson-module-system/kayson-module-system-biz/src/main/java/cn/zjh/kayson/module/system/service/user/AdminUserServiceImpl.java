@@ -5,6 +5,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserUpdateReqVO;
@@ -15,9 +17,13 @@ import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import cn.zjh.kayson.module.system.dal.mysql.dept.UserPostMapper;
 import cn.zjh.kayson.module.system.dal.mysql.user.AdminUserMapper;
 import cn.zjh.kayson.module.system.service.dept.DeptService;
+import cn.zjh.kayson.module.system.service.permission.PermissionService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.InputStream;
+import java.security.Permission;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -41,6 +47,12 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Resource
     private UserPostMapper userPostMapper;
     
+    @Resource
+    private PermissionService permissionService;
+    
+    @Resource
+    private PasswordEncoder passwordEncoder;
+    
     @Override
     public Long createUser(UserCreateReqVO reqVO) {
         // 校验正确性
@@ -49,7 +61,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         // 插入用户
         AdminUserDO user = UserConvert.INSTANCE.convert(reqVO);
         user.setStatus(CommonStatusEnum.ENABLE.getValue()); // 默认开启
-        user.setPassword(reqVO.getPassword()); // TODO：加密密码
+        user.setPassword(encodePassword(reqVO.getPassword())); // 加密密码
         adminUserMapper.insert(user);
         // 插入关联岗位
         if (CollUtil.isNotEmpty(user.getPostIds())) {
@@ -96,7 +108,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         validateUserExists(id);
         // 删除用户
         adminUserMapper.deleteById(id);
-        // TODO: 删除用户关联数据
+        // 删除用户关联数据
+        permissionService.processUserDeleted(id);
         // 删除用户岗位
         userPostMapper.deleteByUserId(id);
     }
@@ -117,7 +130,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         validateUserExists(id);
         // 更新密码
         AdminUserDO updateObj = new AdminUserDO();
-        updateObj.setId(id).setPassword(password); // TODO: 加密密码
+        updateObj.setId(id).setPassword(encodePassword(password)); // 加密密码
         adminUserMapper.updateById(updateObj);
     }
 
@@ -143,13 +156,51 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     public boolean isPasswordMatch(String password, String encodedPassword) {
-        // TODO: 密码暂时未加密，先直接判断是否相等
-        return password.equals(encodedPassword);
+        return passwordEncoder.matches(password, encodedPassword);
     }
 
     @Override
     public void updateUserLogin(Long id, String loginIp) {
         adminUserMapper.updateById(new AdminUserDO().setId(id).setLoginIp(loginIp).setLoginDate(LocalDateTime.now()));
+    }
+
+    @Override
+    public void updateUserProfile(Long id, UserProfileUpdateReqVO reqVO) {
+        // 校验正确性
+        validateUserExists(id);
+        validateEmailUnique(id, reqVO.getEmail());
+        validateMobileUnique(id, reqVO.getMobile());
+        // 执行更新
+        AdminUserDO updateObj = UserConvert.INSTANCE.convert02(reqVO);
+        updateObj.setId(id);
+        adminUserMapper.updateById(updateObj);
+    }
+
+    @Override
+    public void updateUserPassword(Long id, UserProfileUpdatePasswordReqVO reqVO) {
+        // 校验旧密码
+        validateOldPassword(id, reqVO.getOldPassword());
+        // 执行更新
+        AdminUserDO updateObj = new AdminUserDO();
+        updateObj.setId(id);
+        updateObj.setPassword(encodePassword(reqVO.getNewPassword()));
+        adminUserMapper.updateById(updateObj);
+    }
+
+    @Override
+    public String updateUserAvatar(Long id, InputStream avatarFile) throws Exception {
+        // TODO: 更新用户头像
+        return null;
+    }
+
+    private void validateOldPassword(Long id, String oldPassword) {
+        AdminUserDO user = adminUserMapper.selectById(id);
+        if (user == null) {
+            throw exception(USER_NOT_EXISTS);
+        }
+        if (!isPasswordMatch(oldPassword, user.getPassword())) {
+            throw exception(USER_PASSWORD_FAILED);
+        }
     }
 
     /**
@@ -240,5 +291,15 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (!id.equals(user.getId())) {
             throw exception(USER_EMAIL_EXISTS);
         }
+    }
+
+    /**
+     * 对密码进行加密
+     *
+     * @param password 密码
+     * @return 加密后的密码
+     */
+    private String encodePassword(String password) {
+        return passwordEncoder.encode(password);
     }
 }

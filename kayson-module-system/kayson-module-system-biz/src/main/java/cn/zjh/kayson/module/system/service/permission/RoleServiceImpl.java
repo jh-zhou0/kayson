@@ -34,6 +34,9 @@ public class RoleServiceImpl implements RoleService {
     @Resource
     private RoleMapper roleMapper;
     
+    @Resource
+    private PermissionService permissionService;
+    
     @Override
     public Long createRole(RoleCreateReqVO reqVO, Integer type) {
         // 校验角色名和编码
@@ -64,7 +67,8 @@ public class RoleServiceImpl implements RoleService {
         validateRoleForUpdate(id);
         // 删除角色
         roleMapper.selectById(id);
-        // TODO: 删除角色相关数据
+        // 删除角色相关数据
+        permissionService.processRoleDeleted(id);
     }
 
     @Override
