@@ -5,6 +5,7 @@ import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuListR
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -58,4 +59,12 @@ public interface MenuService {
      * @return 菜单列表
      */
     List<MenuDO> getMenuList();
+
+    /**
+     * 获得指定菜单列表
+     * 
+     * @param menuIds 菜单编号数组
+     * @return 菜单列表
+     */
+    List<MenuDO> getMenuList(Collection<Long> menuIds);
 }

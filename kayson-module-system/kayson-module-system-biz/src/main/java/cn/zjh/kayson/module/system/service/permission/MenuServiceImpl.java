@@ -1,5 +1,6 @@
 package cn.zjh.kayson.module.system.service.permission;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuListReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuUpdateReqVO;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
@@ -74,6 +77,14 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public List<MenuDO> getMenuList() {
         return menuMapper.selectList();
+    }
+
+    @Override
+    public List<MenuDO> getMenuList(Collection<Long> menuIds) {
+        if (CollUtil.isEmpty(menuIds)) {
+            return Collections.emptyList();
+        }
+        return menuMapper.selectBatchIds(menuIds);
     }
 
     private void validateForCreateOrUpdate(Long id, Long parentId, String name) {

@@ -1,5 +1,6 @@
 package cn.zjh.kayson.module.system.service.permission;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
@@ -15,6 +16,9 @@ import cn.zjh.kayson.module.system.enums.permission.RoleTypeEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
@@ -71,6 +75,22 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public PageResult<RoleDO> getRolePage(RolePageReqVO reqVO) {
         return roleMapper.selectPage(reqVO);
+    }
+
+    @Override
+    public List<RoleDO> getRoleList(Collection<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return Collections.emptyList();
+        }
+        return roleMapper.selectBatchIds(ids);
+    }
+
+    @Override
+    public boolean hasAnySuperAdmin(Collection<RoleDO> roleList) {
+        if (CollUtil.isEmpty(roleList)) {
+            return false;
+        }
+        return roleList.stream().anyMatch(roleDO -> RoleCodeEnum.isSuperAdmin(roleDO.getCode()));
     }
 
     private void validateRoleForUpdate(Long id) {

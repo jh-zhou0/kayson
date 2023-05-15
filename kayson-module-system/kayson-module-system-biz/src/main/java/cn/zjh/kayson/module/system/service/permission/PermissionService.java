@@ -1,5 +1,10 @@
 package cn.zjh.kayson.module.system.service.permission;
 
+import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
+import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
+
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -41,5 +46,12 @@ public interface PermissionService {
      * @return 菜单编号集合
      */
     Set<Long> getRoleMenuIds(Long roleId);
-    
+
+    /**
+     * 获得角色们拥有的菜单列表
+     *
+     * @param roleList 角色数组
+     * @return 菜单列表
+     */
+    List<MenuDO> getRoleMenuList(Collection<RoleDO> roleList);
 }

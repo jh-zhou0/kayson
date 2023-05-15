@@ -29,5 +29,21 @@ public interface AdminAuthService {
      * @return 用户
      */
     AdminUserDO authenticate(String username, String password);
+
+    /**
+     * 基于 token 退出登录
+     * 
+     * @param token token
+     * @param logoutType 登出类型
+     */
+    void logout(String token, Integer logoutType);
+
+    /**
+     * 刷新访问令牌
+     *
+     * @param refreshToken 刷新令牌
+     * @return 登录结果
+     */
+    AuthLoginRespVO refreshToken(String refreshToken);
     
 }

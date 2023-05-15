@@ -38,4 +38,23 @@ public interface OAuth2TokenService {
      * @return 访问令牌的信息
      */
     OAuth2AccessTokenDO checkAccessToken(String accessToken);
+
+    /**
+     * 移除访问令牌
+     * 注意：该流程中，会移除相关的刷新令牌
+     *
+     * @param accessToken 访问令牌
+     * @return 访问令牌的信息
+     */
+    OAuth2AccessTokenDO removeAccessToken(String accessToken);
+
+    /**
+     * 刷新访问令牌
+     *
+     * @param refreshToken 刷新令牌
+     * @param clientId 客户端编号
+     * @return 访问令牌的信息
+     */
+    OAuth2AccessTokenDO refreshAccessToken(String refreshToken, String clientId);
+    
 }

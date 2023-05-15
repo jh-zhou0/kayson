@@ -7,6 +7,8 @@ import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleUpdat
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 
 import javax.validation.Valid;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * 角色 Service 接口
@@ -53,4 +55,20 @@ public interface RoleService {
      * @return 角色分页结果
      */
     PageResult<RoleDO> getRolePage(RolePageReqVO reqVO);
+
+    /**
+     * 获得角色数组
+     * 
+     * @param ids 角色编号数组
+     * @return 角色数组
+     */
+    List<RoleDO> getRoleList(Collection<Long> ids);
+
+    /**
+     * 判断角色数组中，是否有超级管理员
+     *
+     * @param roleList 角色数组
+     * @return 是否有管理员
+     */
+    boolean hasAnySuperAdmin(Collection<RoleDO> roleList);
 }

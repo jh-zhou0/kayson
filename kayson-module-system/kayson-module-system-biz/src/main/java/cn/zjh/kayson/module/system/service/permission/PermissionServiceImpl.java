@@ -1,6 +1,7 @@
 package cn.zjh.kayson.module.system.service.permission;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
@@ -12,10 +13,7 @@ import cn.zjh.kayson.module.system.enums.permission.RoleCodeEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 权限 Service 实现类
@@ -56,7 +54,15 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public Set<Long> getUserRoleIds(Long userId) {
         List<UserRoleDO> userRoleDOList = userRoleMapper.selectListByUserId(userId);
-        return CollectionUtils.convertSet(userRoleDOList, UserRoleDO::getRoleId);
+        // 创建用户的时候没有分配角色，会存在空指针异常
+        if (CollUtil.isEmpty(userRoleDOList)) {
+            return Collections.emptySet();
+        }
+        // 过滤角色状态，只要开启的
+        Set<Long> roleIds = CollectionUtils.convertSet(userRoleDOList, UserRoleDO::getRoleId);
+        List<RoleDO> roleDOList = roleService.getRoleList(roleIds);
+        return CollectionUtils.convertSet(roleDOList, RoleDO::getId, roleDO -> 
+                CommonStatusEnum.ENABLE.getValue().equals(roleDO.getStatus()));
     }
 
     @Override
@@ -91,5 +97,25 @@ public class PermissionServiceImpl implements PermissionService {
         // 如果是非管理员的情况下，获得拥有的菜单编号
         List<RoleMenuDO> roleMenuDOList = roleMenuMapper.selectListByRoleId(roleId);
         return CollectionUtils.convertSet(roleMenuDOList, RoleMenuDO::getMenuId);
+    }
+
+    @Override
+    public List<MenuDO> getRoleMenuList(Collection<RoleDO> roleList) {
+        if (CollUtil.isEmpty(roleList)) {
+            return Collections.emptyList();
+        }
+        // 判断角色是否包含超级管理员。如果是超级管理员，获取到全部
+        if (roleService.hasAnySuperAdmin(roleList)) {
+            return menuService.getMenuList();
+        }
+        // 获得角色拥有的菜单关联
+        Set<Long> roleIds = CollectionUtils.convertSet(roleList, RoleDO::getId);
+        Set<Long> menuIds = new HashSet<>();
+        roleIds.forEach(roleId -> {
+            List<RoleMenuDO> roleMenuDOList = roleMenuMapper.selectListByRoleId(roleId);
+            Set<Long> menuIdSet = CollectionUtils.convertSet(roleMenuDOList, RoleMenuDO::getMenuId);
+            menuIds.addAll(menuIdSet);
+        });
+        return menuService.getMenuList(menuIds);
     }
 }

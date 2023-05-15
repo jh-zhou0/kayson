@@ -75,6 +75,23 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         return user;
     }
 
+    @Override
+    public void logout(String token, Integer logoutType) {
+        // 删除访问令牌
+        OAuth2AccessTokenDO accessTokenDO = oAuth2TokenService.removeAccessToken(token);
+        if (accessTokenDO == null) {
+            return;
+        }
+        // 删除成功，则记录登出日志
+        createLogoutLog(accessTokenDO.getUserId(), accessTokenDO.getUserType(), logoutType);
+    }
+
+    @Override
+    public AuthLoginRespVO refreshToken(String refreshToken) {
+        OAuth2AccessTokenDO accessTokenDO = oAuth2TokenService.refreshAccessToken(refreshToken, OAuth2ClientConstants.CLIENT_ID_DEFAULT);
+        return AuthConvert.INSTANCE.convert(accessTokenDO);
+    }
+
     private AuthLoginRespVO createTokenAfterLoginSuccess(Long userId, String username, LoginLogTypeEnum loginType) {
         // 插入登陆日志
         createLoginLog(userId, username, loginType, LoginResultEnum.SUCCESS);
@@ -100,6 +117,27 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         if (userId != null && Objects.equals(LoginResultEnum.SUCCESS.getResult(), loginResult.getResult())) {
             adminUserService.updateUserLogin(userId, ServletUtils.getClientIP());
         }
+    }
+
+    private void createLogoutLog(Long userId, Integer userType, Integer logoutType) {
+        LoginLogCreateReqDTO reqDTO = new LoginLogCreateReqDTO()
+                .setLogType(logoutType)
+                .setTraceId(null)
+                .setUserId(userId)
+                .setUserType(getUserType().getValue())
+                .setUsername(getUsername(userId))
+                .setUserAgent(ServletUtils.getUserAgent())
+                .setUserIp(ServletUtils.getClientIP())
+                .setResult(LoginResultEnum.SUCCESS.getResult());
+        loginLogService.createLoginLog(reqDTO);
+    }
+
+    private String getUsername(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        AdminUserDO user = adminUserService.getUser(userId);
+        return user == null ? null : user.getUsername();
     }
 
     private UserTypeEnum getUserType() {
