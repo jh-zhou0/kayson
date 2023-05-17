@@ -9,6 +9,7 @@
         <module>kayson-spring-boot-starter-security</module>
         <module>kayson-spring-boot-starter-mybatis</module>
         <module>kayson-spring-boot-starter-redis</module>
+        <module>kayson-spring-boot-starter-biz-operatelog</module>
     </modules>
     <parent>
         <artifactId>kayson</artifactId>

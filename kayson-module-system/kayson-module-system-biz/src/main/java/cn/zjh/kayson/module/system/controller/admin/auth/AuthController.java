@@ -2,6 +2,7 @@ package cn.zjh.kayson.module.system.controller.admin.auth;
 
 import cn.hutool.core.util.StrUtil;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
+import cn.zjh.kayson.framework.operatelog.core.annotations.OperateLog;
 import cn.zjh.kayson.framework.security.config.SecurityProperties;
 import cn.zjh.kayson.framework.security.core.util.SecurityFrameworkUtils;
 import cn.zjh.kayson.module.system.controller.admin.auth.vo.AuthLoginReqVO;
@@ -59,6 +60,7 @@ public class AuthController {
     @PostMapping("/login")
     @PermitAll
     @Operation(summary = "使用账号密码登录")
+    @OperateLog(enable = false) // 避免 Post 请求被记录操作日志
     public CommonResult<AuthLoginRespVO> login(@RequestBody @Valid AuthLoginReqVO reqVO) {
         return success(authService.login(reqVO));
     }
@@ -66,6 +68,7 @@ public class AuthController {
     @PostMapping("/logout")
     @PermitAll
     @Operation(summary = "登出系统")
+    @OperateLog(enable = false) // 避免 Post 请求被记录操作日志
     public CommonResult<Boolean> logout(HttpServletRequest request) {
         String token = SecurityFrameworkUtils.obtainAuthorization(request, securityProperties.getTokenHeader());
         if (StrUtil.isNotBlank(token)) {
@@ -78,6 +81,7 @@ public class AuthController {
     @PermitAll
     @Operation(summary = "刷新令牌")
     @Parameter(name = "refreshToken", description = "刷新令牌", required = true)
+    @OperateLog(enable = false) // 避免 Post 请求被记录操作日志
     public CommonResult<AuthLoginRespVO> refreshToken(@RequestParam("refreshToken") String refreshToken) {
         return success(authService.refreshToken(refreshToken));
     }

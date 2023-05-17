@@ -83,6 +83,13 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- 业务组件 -->
+            <dependency>
+                <groupId>cn.zjh.boot</groupId>
+                <artifactId>kayson-spring-boot-starter-biz-operatelog</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
             <!-- Spring 核心 -->
             <dependency>
                 <!-- 用于生成自定义的 Spring @ConfigurationProperties 配置类的说明文件 -->
