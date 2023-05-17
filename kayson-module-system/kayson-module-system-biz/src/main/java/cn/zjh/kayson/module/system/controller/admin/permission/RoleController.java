@@ -12,6 +12,7 @@ import cn.zjh.kayson.module.system.service.permission.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,12 +35,14 @@ public class RoleController {
 
     @PostMapping("/create")
     @Operation(summary = "创建角色")
+    @PreAuthorize("@ss.hasPermission('system:role:create')")
     public CommonResult<Long> createRole(@Valid @RequestBody RoleCreateReqVO reqVO) {
         return success(roleService.createRole(reqVO, null));
     }
 
     @PutMapping("/update")
     @Operation(summary = "修改角色")
+    @PreAuthorize("@ss.hasPermission('system:role:update')")
     public CommonResult<Boolean> updateRole(@Valid @RequestBody RoleUpdateReqVO reqVO) {
         roleService.updateRole(reqVO);
         return success(true);
@@ -48,6 +51,7 @@ public class RoleController {
     @DeleteMapping("/delete")
     @Operation(summary = "删除角色")
     @Parameter(name = "id", description = "角色编号", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('system:role:delete')")
     public CommonResult<Boolean> deleteRole(@RequestParam("id") Long id) {
         roleService.deleteRole(id);
         return success(true);
@@ -55,6 +59,7 @@ public class RoleController {
 
     @GetMapping("/get")
     @Operation(summary = "获得角色信息")
+    @PreAuthorize("@ss.hasPermission('system:role:query')")
     public CommonResult<RoleRespVO> getRole(@RequestParam("id") Long id) {
         RoleDO role = roleService.getRole(id);
         return success(RoleConvert.INSTANCE.convert(role));
@@ -62,6 +67,7 @@ public class RoleController {
 
     @GetMapping("/page")
     @Operation(summary = "获得角色分页")
+    @PreAuthorize("@ss.hasPermission('system:role:query')")
     public CommonResult<PageResult<RoleDO>> getRolePage(@Valid RolePageReqVO reqVO) {
         return success(roleService.getRolePage(reqVO));
     }

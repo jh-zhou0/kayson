@@ -2,8 +2,10 @@ package cn.zjh.kayson.framework.web.core.handler;
 
 import cn.zjh.kayson.framework.common.exception.ServiceException;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
+import cn.zjh.kayson.framework.web.core.util.WebFrameworkUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -65,9 +67,9 @@ public class GlobalExceptionHandler {
         if (ex instanceof ServiceException) {
             return serviceExceptionHandler((ServiceException) ex);
         }
-//        if (ex instanceof AccessDeniedException) {
-//            return accessDeniedExceptionHandler(request, (AccessDeniedException) ex);
-//        }
+        if (ex instanceof AccessDeniedException) {
+            return accessDeniedExceptionHandler(request, (AccessDeniedException) ex);
+        }
         return defaultExceptionHandler(request, ex);
     }
 
@@ -154,12 +156,12 @@ public class GlobalExceptionHandler {
      *
      * 来源是，使用 @PreAuthorize 注解，AOP 进行权限拦截
      */
-//    @ExceptionHandler(value = AccessDeniedException.class)
-//    public CommonResult<?> accessDeniedExceptionHandler(HttpServletRequest req, AccessDeniedException ex) {
-//        log.warn("[accessDeniedExceptionHandler][userId({}) 无法访问 url({})]", WebFrameworkUtils.getLoginUserId(req),
-//                req.getRequestURL(), ex);
-//        return CommonResult.error(FORBIDDEN);
-//    }
+    @ExceptionHandler(value = AccessDeniedException.class)
+    public CommonResult<?> accessDeniedExceptionHandler(HttpServletRequest req, AccessDeniedException ex) {
+        log.warn("[accessDeniedExceptionHandler][userId({}) 无法访问 url({})]", WebFrameworkUtils.getLoginUserId(req),
+                req.getRequestURL(), ex);
+        return CommonResult.error(FORBIDDEN);
+    }
 
     /**
      * 处理业务异常 ServiceException

@@ -8,6 +8,7 @@ import cn.zjh.kayson.framework.security.core.service.SecurityFrameworkService;
 import cn.zjh.kayson.framework.security.core.service.SecurityFrameworkServiceImpl;
 import cn.zjh.kayson.framework.web.core.handler.GlobalExceptionHandler;
 import cn.zjh.kayson.module.system.api.oauth2.OAuth2TokenApi;
+import cn.zjh.kayson.module.system.api.permission.PermissionApi;
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -67,8 +68,8 @@ public class KaysonSecurityAutoConfiguration {
     }
 
     @Bean("ss") // 使用 Spring Security 的缩写，方便使用
-    public SecurityFrameworkService securityFrameworkService() {
-        return new SecurityFrameworkServiceImpl();
+    public SecurityFrameworkService securityFrameworkService(PermissionApi permissionApi) {
+        return new SecurityFrameworkServiceImpl(permissionApi);
     }
 
     /**

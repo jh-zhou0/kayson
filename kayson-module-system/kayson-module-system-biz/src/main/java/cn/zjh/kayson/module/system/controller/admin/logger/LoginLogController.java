@@ -9,6 +9,7 @@ import cn.zjh.kayson.module.system.dal.dataobject.logger.LoginLogDO;
 import cn.zjh.kayson.module.system.service.logger.LoginLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +32,7 @@ public class LoginLogController {
 
     @GetMapping("/page")
     @Operation(summary = "获得登录日志分页列表")
+    @PreAuthorize("@ss.hasPermission('system:login-log:query')")
     public CommonResult<PageResult<LoginLogRespVO>> getLoginLogPage(@Valid LoginLogPageReqVO reqVO) {
         PageResult<LoginLogDO> page = loginLogService.getLoginLogPage(reqVO);
         return CommonResult.success(LoginLogConvert.INSTANCE.convertPage(page));

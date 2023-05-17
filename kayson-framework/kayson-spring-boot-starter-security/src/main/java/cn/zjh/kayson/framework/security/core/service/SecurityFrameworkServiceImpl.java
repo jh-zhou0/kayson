@@ -1,32 +1,38 @@
 package cn.zjh.kayson.framework.security.core.service;
 
+import cn.zjh.kayson.module.system.api.permission.PermissionApi;
+import lombok.RequiredArgsConstructor;
+
+import static cn.zjh.kayson.framework.security.core.util.SecurityFrameworkUtils.getLoginUserId;
+
 /**
  * 默认的 {@link SecurityFrameworkService} 实现类
  * 
  * @author zjh - kayson
  */
+@RequiredArgsConstructor
 public class SecurityFrameworkServiceImpl implements SecurityFrameworkService{
     
-    // TODO
+    private final PermissionApi permissionApi;
     
     @Override
     public boolean hasPermission(String permission) {
-        return true;
+        return hasAnyPermissions(permission);
     }
 
     @Override
     public boolean hasAnyPermissions(String... permissions) {
-        return true;
+        return permissionApi.hasAnyPermissions(getLoginUserId(), permissions);
     }
 
     @Override
     public boolean hasRole(String role) {
-        return true;
+        return hasAnyRoles(role);
     }
 
     @Override
     public boolean hasAnyRoles(String... roles) {
-        return true;
+        return permissionApi.hasAnyRoles(getLoginUserId(), roles);
     }
 
     @Override

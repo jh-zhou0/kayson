@@ -14,6 +14,7 @@ import cn.zjh.kayson.module.system.service.user.AdminUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,6 +44,7 @@ public class UserController {
 
     @PostMapping("/create")
     @Operation(summary = "新增用户")
+    @PreAuthorize("@ss.hasPermission('system:user:create')")
     public CommonResult<Long> createUser(@Valid @RequestBody UserCreateReqVO reqVO) {
         Long userId = adminUserService.createUser(reqVO);
         return success(userId);
@@ -50,6 +52,7 @@ public class UserController {
 
     @PutMapping("/update")
     @Operation(summary = "修改用户")
+    @PreAuthorize("@ss.hasPermission('system:user:update')")
     public CommonResult<Boolean> updateUser(@Valid @RequestBody UserUpdateReqVO reqVO) {
         adminUserService.updateUser(reqVO);
         return success(true);
@@ -58,6 +61,7 @@ public class UserController {
     @DeleteMapping("/delete")
     @Operation(summary = "删除用户")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('system:user:delete')")
     public CommonResult<Boolean> deleteUser(@RequestParam("id") Long id) {
         adminUserService.deleteUser(id);
         return success(true);
@@ -66,6 +70,7 @@ public class UserController {
     @GetMapping("/get")
     @Operation(summary = "获得用户详情")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('system:user:query')")
     public CommonResult<UserRespVO> getUser(@RequestParam("id") Long id) {
         AdminUserDO user = adminUserService.getUser(id);
         // 获得部门数据，设置到 UserPageItemRespVO 中
@@ -75,6 +80,7 @@ public class UserController {
     
     @GetMapping("/page")
     @Operation(summary = "获得用户分页列表")
+    @PreAuthorize("@ss.hasPermission('system:user:list')")
     public CommonResult<PageResult<UserPageItemRespVO>> getUserPage(@Valid UserPageReqVO reqVO) {
         // 获得用户分页列表
         PageResult<AdminUserDO> pageResult = adminUserService.getUserPage(reqVO);
@@ -98,6 +104,7 @@ public class UserController {
 
     @PutMapping("/update-password")
     @Operation(summary = "重置用户密码")
+    @PreAuthorize("@ss.hasPermission('system:user:update-password')")
     public CommonResult<Boolean> updateUserPassword(@Valid @RequestBody UserUpdatePasswordReqVO reqVO) {
         adminUserService.updateUserPassword(reqVO.getId(), reqVO.getPassword());
         return success(true);
@@ -105,6 +112,7 @@ public class UserController {
 
     @PutMapping("/update-status")
     @Operation(summary = "修改用户状态")
+    @PreAuthorize("@ss.hasPermission('system:user:update')")
     public CommonResult<Boolean> updateUserStatus(@Valid @RequestBody UserUpdateStatusReqVO reqVO) {
         adminUserService.updateUserStatus(reqVO.getId(), reqVO.getStatus());
         return success(true);

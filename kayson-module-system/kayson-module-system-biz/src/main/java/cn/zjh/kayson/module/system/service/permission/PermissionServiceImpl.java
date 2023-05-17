@@ -1,6 +1,7 @@
 package cn.zjh.kayson.module.system.service.permission;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
@@ -10,6 +11,7 @@ import cn.zjh.kayson.module.system.dal.dataobject.permission.UserRoleDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.RoleMenuMapper;
 import cn.zjh.kayson.module.system.dal.mysql.permission.UserRoleMapper;
 import cn.zjh.kayson.module.system.enums.permission.RoleCodeEnum;
+import com.google.common.collect.Sets;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -133,5 +135,43 @@ public class PermissionServiceImpl implements PermissionService {
     public void processRoleDeleted(Long roleId) {
         userRoleMapper.deleteListByRoleId(roleId);
         roleMenuMapper.deleteListByRoleId(roleId);
+    }
+
+    @Override
+    public boolean hasAnyPermissions(Long userId, String... permissions) {
+        // TODO: Why? 如果为空，说明已经有权限
+        if (ArrayUtil.isEmpty(permissions)) {
+            return true;
+        }
+        // 获得当前登录用户的角色。如果为空，说明没有权限
+        Set<Long> roleIds = getUserRoleIds(userId);
+        if (CollUtil.isEmpty(roleIds)) {
+            return false;
+        }
+        // 遍历权限，判断是否有一个满足
+        List<RoleDO> roleList = roleService.getRoleList(roleIds);
+        List<MenuDO> menuList = getRoleMenuList(roleList);
+        Set<String> dbPermissions = CollectionUtils.convertSet(menuList, MenuDO::getPermission);
+        return CollUtil.containsAny(dbPermissions, Sets.newHashSet(permissions));
+    }
+
+    @Override
+    public boolean hasAnyRoles(Long userId, String... roles) {
+        // TODO: Why? 如果为空，说明已经有权限
+        if (ArrayUtil.isEmpty(roles)) {
+            return true;
+        }
+        // 获得当前登录用户的角色。如果为空，说明没有权限
+        Set<Long> roleIds = getUserRoleIds(userId);
+        if (CollUtil.isEmpty(roleIds)) {
+            return false;
+        }
+        // 判断是否是超管。如果是，当然符合条件
+        List<RoleDO> roleList = roleService.getRoleList(roleIds);
+        if (roleService.hasAnySuperAdmin(roleList)) {
+            return true;
+        }
+        Set<String> userRoles = CollectionUtils.convertSet(roleList, RoleDO::getCode);
+        return CollUtil.containsAny(userRoles, Sets.newHashSet(roleIds));
     }
 }
