@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.enums.UserTypeEnum;
 import cn.zjh.kayson.framework.common.util.servlet.ServletUtils;
+import cn.zjh.kayson.framework.common.util.validation.ValidationUtils;
 import cn.zjh.kayson.module.system.api.logger.dto.LoginLogCreateReqDTO;
 import cn.zjh.kayson.module.system.controller.admin.auth.vo.AuthLoginReqVO;
 import cn.zjh.kayson.module.system.controller.admin.auth.vo.AuthLoginRespVO;
@@ -16,15 +17,19 @@ import cn.zjh.kayson.module.system.enums.oauth2.OAuth2ClientConstants;
 import cn.zjh.kayson.module.system.service.logger.LoginLogService;
 import cn.zjh.kayson.module.system.service.oauth2.OAuth2TokenService;
 import cn.zjh.kayson.module.system.service.user.AdminUserService;
+import com.xingyuv.captcha.model.common.ResponseModel;
+import com.xingyuv.captcha.model.vo.CaptchaVO;
+import com.xingyuv.captcha.service.CaptchaService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.validation.Validator;
 
 import java.util.Objects;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
-import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.AUTH_LOGIN_BAD_CREDENTIALS;
-import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.AUTH_LOGIN_USER_DISABLED;
+import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
 
 /**
  * Auth Service 实现类
@@ -43,14 +48,45 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     @Resource
     private LoginLogService loginLogService;
 
+    @Resource
+    private Validator validator;
+    
+    @Resource
+    private CaptchaService captchaService;
+    
+    /**
+     * 验证码的开关，默认为 true
+     */
+    @Value("${kayson.captcha.enable:true}")
+    private Boolean captchaEnable;
+
     @Override
     public AuthLoginRespVO login(AuthLoginReqVO reqVO) {
-        // TODO:校验验证码
+        // 校验验证码
+        validateCaptcha(reqVO);
         // 使用账号密码，进行登录
         AdminUserDO user = authenticate(reqVO.getUsername(), reqVO.getPassword());
         // TODO: 绑定社交用户
         // 创建 Token 令牌，记录登录日志
         return createTokenAfterLoginSuccess(user.getId(), user.getUsername(), LoginLogTypeEnum.LOGIN_USERNAME);
+    }
+
+    private void validateCaptcha(AuthLoginReqVO reqVO) {
+        // 如果验证码关闭，则不进行校验
+        if (!captchaEnable) {
+            return;
+        }
+        // 校验验证码
+        ValidationUtils.validate(validator, reqVO, AuthLoginReqVO.CodeEnableGroup.class);
+        CaptchaVO captchaVO = new CaptchaVO();
+        captchaVO.setCaptchaVerification(reqVO.getCaptchaVerification());
+        ResponseModel responseModel = captchaService.verification(captchaVO);
+        // 验证不通过
+        if (!responseModel.isSuccess()) {
+            // 创建登录失败日志（验证码不正确)
+            createLoginLog(null, reqVO.getUsername(), LoginLogTypeEnum.LOGIN_USERNAME, LoginResultEnum.CAPTCHA_CODE_ERROR);
+            throw exception(AUTH_LOGIN_CAPTCHA_CODE_ERROR, responseModel.getRepMsg());
+        }
     }
 
     @Override

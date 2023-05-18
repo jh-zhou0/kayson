@@ -29,4 +29,15 @@ public class AuthLoginReqVO {
     @Length(min = 4, max = 16, message = "密码长度为 4-16 位")
     private String password;
 
+    // ========== 图片验证码相关 ==========
+    @Schema(description = "验证码，验证码开启时，需要传递", requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "PfcH6mgr8tpXuMWFjvW6YVaqrswIuwmWI5dsVZSg7sGpWtDCUbHuDEXl3cFB1+VvCC/rAkSwK8Fad52FSuncVg==")
+    @NotEmpty(message = "验证码不能为空", groups = CodeEnableGroup.class)
+    private String captchaVerification;
+    
+    /**
+     * 开启验证码的 Group
+     */
+    public interface CodeEnableGroup {}
+
 }

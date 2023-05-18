@@ -66,3 +66,5 @@ kayson:
     mock-enable: true
   access-log: # 访问日志的配置项
     enable: false
+  captcha:
+    enable: false # 验证码的开关，默认为 true
