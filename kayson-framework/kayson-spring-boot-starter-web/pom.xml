@@ -48,6 +48,13 @@
             <artifactId>spring-security-core</artifactId>
             <scope>provided</scope> <!-- 设置为 provided，主要是 GlobalExceptionHandler 使用 -->
         </dependency>
+
+        <!-- 业务组件 -->
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-module-infra-api</artifactId> <!-- 需要使用它，进行操作日志的记录 -->
+            <version>${revision}</version>
+        </dependency>
         
     </dependencies>
 

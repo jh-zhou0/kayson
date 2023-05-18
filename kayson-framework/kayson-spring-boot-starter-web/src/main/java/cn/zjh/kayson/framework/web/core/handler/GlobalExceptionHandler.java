@@ -1,11 +1,21 @@
 package cn.zjh.kayson.framework.web.core.handler;
 
+import cn.hutool.core.exceptions.ExceptionUtil;
+import cn.hutool.core.map.MapBuilder;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.extra.servlet.ServletUtil;
+import cn.zjh.kayson.framework.apilog.core.service.ApiErrorLog;
+import cn.zjh.kayson.framework.apilog.core.service.ApiErrorLogFrameworkService;
 import cn.zjh.kayson.framework.common.exception.ServiceException;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
+import cn.zjh.kayson.framework.common.util.json.JsonUtils;
+import cn.zjh.kayson.framework.common.util.servlet.ServletUtils;
 import cn.zjh.kayson.framework.web.core.util.WebFrameworkUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.util.Assert;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -20,6 +30,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
 import static cn.zjh.kayson.framework.common.exception.enums.GlobalErrorCodeConstants.*;
 
 /**
@@ -32,7 +45,9 @@ import static cn.zjh.kayson.framework.common.exception.enums.GlobalErrorCodeCons
 @Slf4j
 public class GlobalExceptionHandler {
     
-    private String applicationName;
+    private final String applicationName;
+    
+    private final ApiErrorLogFrameworkService apiErrorLogFrameworkService;
 
     /**
      * 处理所有异常，主要是提供给 Filter 使用
@@ -187,6 +202,47 @@ public class GlobalExceptionHandler {
     }
 
     private void createExceptionLog(HttpServletRequest req, Throwable e) {
-        // TODO: API 错误日志
+        // 插入错误日志
+        ApiErrorLog errorLog = new ApiErrorLog();
+        try {
+            // 初始化 errorLog
+            initExceptionLog(errorLog, req, e);
+            // 执行插入 errorLog
+            apiErrorLogFrameworkService.createApiErrorLog(errorLog);
+        } catch (Throwable th) {
+            log.error("[createExceptionLog][url({}) log({}) 发生异常]", req.getRequestURI(),  JsonUtils.toJsonString(errorLog), th);
+        }
+    }
+
+    private void initExceptionLog(ApiErrorLog errorLog, HttpServletRequest request, Throwable e) {
+        // 处理用户信息
+        errorLog.setUserId(WebFrameworkUtils.getLoginUserId(request));
+        errorLog.setUserType(WebFrameworkUtils.getLoginUserType(request));
+        // 设置异常字段
+        errorLog.setExceptionName(e.getClass().getName());
+        errorLog.setExceptionMessage(ExceptionUtil.getMessage(e));
+        errorLog.setExceptionRootCauseMessage(ExceptionUtil.getRootCauseMessage(e));
+        errorLog.setExceptionStackTrace(ExceptionUtils.getStackTrace(e));
+        StackTraceElement[] stackTraceElements = e.getStackTrace();
+        Assert.notEmpty(stackTraceElements, "异常 stackTraceElements 不能为空");
+        StackTraceElement stackTraceElement = stackTraceElements[0];
+        errorLog.setExceptionClassName(stackTraceElement.getClassName());
+        errorLog.setExceptionFileName(stackTraceElement.getFileName());
+        errorLog.setExceptionMethodName(stackTraceElement.getMethodName());
+        errorLog.setExceptionLineNumber(stackTraceElement.getLineNumber());
+        // 设置其它字段
+        errorLog.setTraceId("null"); // TODO: SkyWalking
+        errorLog.setApplicationName(applicationName);
+        errorLog.setRequestUrl(request.getRequestURI());
+        errorLog.setRequestMethod(request.getMethod());
+        MapBuilder<String, Object> paramBuilder = MapUtil.builder();
+        Map<String, Object> params = paramBuilder
+                .put("query", ServletUtil.getParamMap(request))
+                .put("body", ServletUtil.getBody(request))
+                .build();
+        errorLog.setRequestParams(JsonUtils.toJsonString(params));
+        errorLog.setUserAgent(ServletUtils.getUserAgent(request));
+        errorLog.setUserIp(ServletUtil.getClientIP(request));
+        errorLog.setExceptionTime(LocalDateTime.now());
     }
 }

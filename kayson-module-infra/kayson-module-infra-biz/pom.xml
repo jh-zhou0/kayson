@@ -36,6 +36,17 @@
             <artifactId>kayson-spring-boot-starter-security</artifactId>
         </dependency>
         
+        <!-- DB相关 -->
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-spring-boot-starter-mybatis</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-spring-boot-starter-redis</artifactId>
+        </dependency>
+        
     </dependencies>
 
 </project>

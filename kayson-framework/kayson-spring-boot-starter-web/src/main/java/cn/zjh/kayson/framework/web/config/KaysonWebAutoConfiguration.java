@@ -1,5 +1,6 @@
 package cn.zjh.kayson.framework.web.config;
 
+import cn.zjh.kayson.framework.apilog.core.service.ApiErrorLogFrameworkService;
 import cn.zjh.kayson.framework.common.enums.WebFilterOrderEnum;
 import cn.zjh.kayson.framework.web.core.filter.CacheRequestBodyFilter;
 import cn.zjh.kayson.framework.web.core.handler.GlobalExceptionHandler;
@@ -55,8 +56,8 @@ public class KaysonWebAutoConfiguration implements WebMvcConfigurer {
     }
     
     @Bean
-    public GlobalExceptionHandler globalExceptionHandler() {
-        return new GlobalExceptionHandler(applicationName);
+    public GlobalExceptionHandler globalExceptionHandler(ApiErrorLogFrameworkService apiErrorLogFrameworkService) {
+        return new GlobalExceptionHandler(applicationName, apiErrorLogFrameworkService);
     }
     
     @Bean
