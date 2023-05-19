@@ -60,6 +60,13 @@
             <groupId>cn.zjh.boot</groupId>
             <artifactId>kayson-spring-boot-starter-redis</artifactId>
         </dependency>
+        
+        <!-- Test 测试相关 -->
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 </project>
