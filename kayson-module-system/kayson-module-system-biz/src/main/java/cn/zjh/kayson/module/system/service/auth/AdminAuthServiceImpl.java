@@ -17,6 +17,7 @@ import cn.zjh.kayson.module.system.enums.oauth2.OAuth2ClientConstants;
 import cn.zjh.kayson.module.system.service.logger.LoginLogService;
 import cn.zjh.kayson.module.system.service.oauth2.OAuth2TokenService;
 import cn.zjh.kayson.module.system.service.user.AdminUserService;
+import com.google.common.annotations.VisibleForTesting;
 import com.xingyuv.captcha.model.common.ResponseModel;
 import com.xingyuv.captcha.model.vo.CaptchaVO;
 import com.xingyuv.captcha.service.CaptchaService;
@@ -71,7 +72,8 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         return createTokenAfterLoginSuccess(user.getId(), user.getUsername(), LoginLogTypeEnum.LOGIN_USERNAME);
     }
 
-    private void validateCaptcha(AuthLoginReqVO reqVO) {
+    @VisibleForTesting
+    void validateCaptcha(AuthLoginReqVO reqVO) {
         // 如果验证码关闭，则不进行校验
         if (!captchaEnable) {
             return;
