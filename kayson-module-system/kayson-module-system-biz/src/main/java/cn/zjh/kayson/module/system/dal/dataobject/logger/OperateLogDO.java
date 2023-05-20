@@ -3,6 +3,7 @@ package cn.zjh.kayson.module.system.dal.dataobject.logger;
 import cn.zjh.kayson.framework.common.enums.UserTypeEnum;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.mybatis.core.dataobject.BaseDO;
+import cn.zjh.kayson.framework.operatelog.core.enums.OperateTypeEnum;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
