@@ -11,6 +11,7 @@ import cn.zjh.kayson.module.system.controller.admin.oauth2.vo.OAuth2ClientUpdate
 import cn.zjh.kayson.module.system.convert.oauth2.OAuth2ClientConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
 import cn.zjh.kayson.module.system.dal.mysql.oauth2.OAuth2ClientMapper;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -108,7 +109,8 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
         }
     }
 
-    private void validateClientIdExists(Long id, String clientId) {
+    @VisibleForTesting
+    void validateClientIdExists(Long id, String clientId) {
         OAuth2ClientDO client = oAuth2ClientMapper.selectByClientId(clientId);
         if (client == null) {
             return;
