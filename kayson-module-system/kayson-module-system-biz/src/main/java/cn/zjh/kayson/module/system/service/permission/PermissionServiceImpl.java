@@ -38,7 +38,8 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public void assignUserRole(Long userId, Set<Long> roleIds) {
         // 获得用户拥有角色编号
-        Set<Long> dbRoleIds = getUserRoleIds(userId);
+        Set<Long> dbRoleIds = CollectionUtils.convertSet(
+                userRoleMapper.selectListByUserId(userId), UserRoleDO::getRoleId);
         // 计算新增和删除的角色编号
         Collection<Long> createRoleIds = CollUtil.subtract(roleIds, dbRoleIds);
         Collection<Long> deleteRoleIds = CollUtil.subtract(dbRoleIds, roleIds);
