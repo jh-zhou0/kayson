@@ -162,6 +162,24 @@ public class DeptServiceImpl implements DeptService{
         return result;
     }
 
+    @Override
+    public void validateDeptList(Collection<Long> ids) {
+        if (CollUtil.isEmpty(ids)){
+            return;
+        }
+        // 获得部门信息
+        Map<Long, DeptDO> deptMap = getDeptMap(ids);
+        ids.forEach(id -> {
+            DeptDO dept = deptMap.get(id);
+            if (dept == null) {
+                throw exception(DEPT_NOT_FOUND);
+            }
+            if (CommonStatusEnum.DISABLE.getStatus().equals(dept.getStatus())) {
+                throw exception(DEPT_NOT_ENABLE);
+            }
+        });
+    }
+
     private void getDeptChildrenById(List<DeptDO> result, Long id, List<DeptDO> deptDOList, Integer recursiveCount) {
         if (recursiveCount == 0) {
             return;

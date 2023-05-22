@@ -1,6 +1,9 @@
 package cn.zjh.kayson.module.system.service.dept;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostUpdateReqVO;
@@ -10,6 +13,9 @@ import cn.zjh.kayson.module.system.dal.mysql.dept.PostMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
@@ -60,6 +66,25 @@ public class PostServiceImpl implements PostService{
     @Override
     public PageResult<PostDO> getPostPage(PostPageReqVO reqVO) {
         return postMapper.selectPage(reqVO);
+    }
+
+    @Override
+    public void validatePostList(Set<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return;
+        }
+        // 获得岗位信息
+        List<PostDO> postDOList = postMapper.selectBatchIds(ids);
+        Map<Long, PostDO> postMap = CollectionUtils.convertMap(postDOList, PostDO::getId);
+        ids.forEach(id -> {
+            PostDO post = postMap.get(id);
+            if (post == null) {
+                throw exception(POST_NOT_FOUND);
+            }
+            if (CommonStatusEnum.DISABLE.getStatus().equals(post.getStatus())) {
+                throw exception(POST_NOT_ENABLE);
+            }
+        });
     }
 
     private void validatePostForCreateOrUpdate(Long id, String name, String code) {

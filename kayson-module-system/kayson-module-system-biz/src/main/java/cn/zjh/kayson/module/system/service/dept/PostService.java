@@ -6,6 +6,8 @@ import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.PostDO;
 
+import java.util.Set;
+
 /**
  * 岗位 Service 接口
  * 
@@ -50,4 +52,13 @@ public interface PostService {
      * @return 部门分页列表
      */
     PageResult<PostDO> getPostPage(PostPageReqVO reqVO);
+
+    /**
+     * 校验岗位们是否有效。如下情况，视为无效：
+     * 1. 岗位编号不存在
+     * 2. 岗位被禁用
+     *
+     * @param ids 岗位编号数组
+     */
+    void validatePostList(Set<Long> ids);
 }

@@ -17,7 +17,9 @@ import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import cn.zjh.kayson.module.system.dal.mysql.dept.UserPostMapper;
 import cn.zjh.kayson.module.system.dal.mysql.user.AdminUserMapper;
 import cn.zjh.kayson.module.system.service.dept.DeptService;
+import cn.zjh.kayson.module.system.service.dept.PostService;
 import cn.zjh.kayson.module.system.service.permission.PermissionService;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +47,9 @@ public class AdminUserServiceImpl implements AdminUserService {
     
     @Resource
     private DeptService deptService;
+    
+    @Resource
+    private PostService postService;
     
     @Resource
     private UserPostMapper userPostMapper;
@@ -90,7 +95,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         Long userId = reqVO.getId();
         // 获取当前用户对应的岗位
         List<UserPostDO> userPostDOList = userPostMapper.selectListByUserId(userId);
-        Set<Long> dbPostIds = CollectionUtils.convertSet(userPostDOList, UserPostDO::getId);
+        Set<Long> dbPostIds = CollectionUtils.convertSet(userPostDOList, UserPostDO::getPostId);
         // 计算新增和删除的岗位编号
         Set<Long> postIds = updateObj.getPostIds();
         Collection<Long> createPostIds = CollUtil.subtract(postIds, dbPostIds);
@@ -195,7 +200,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         return null;
     }
 
-    private void validateOldPassword(Long id, String oldPassword) {
+    @VisibleForTesting
+    void validateOldPassword(Long id, String oldPassword) {
         AdminUserDO user = adminUserMapper.selectById(id);
         if (user == null) {
             throw exception(USER_NOT_EXISTS);
@@ -232,9 +238,14 @@ public class AdminUserServiceImpl implements AdminUserService {
         validateMobileUnique(id, mobile);
         // 校验邮箱唯一
         validateEmailUnique(id, email);
+        // 校验部门处于开启状态
+        deptService.validateDeptList(CollectionUtils.singleton(deptId));
+        // 校验岗位处于开启状态
+        postService.validatePostList(postIds);
     }
 
-    private void validateUserExists(Long id) {
+    @VisibleForTesting
+    void validateUserExists(Long id) {
         if (id == null) {
             return;
         }
@@ -244,7 +255,9 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
     
     }
-    private void validateUsernameUnique(Long id, String username) {
+    
+    @VisibleForTesting
+    void validateUsernameUnique(Long id, String username) {
         if (StrUtil.isBlank(username)) {
             return;
         }
@@ -261,7 +274,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
     }
 
-    private void validateMobileUnique(Long id, String mobile) {
+    @VisibleForTesting
+    void validateMobileUnique(Long id, String mobile) {
         if (StrUtil.isBlank(mobile)) {
             return;
         }
@@ -278,7 +292,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
     }
     
-    private void validateEmailUnique(Long id, String email) {
+    @VisibleForTesting
+    void validateEmailUnique(Long id, String email) {
         if (StrUtil.isBlank(email)) {
             return;
         }
