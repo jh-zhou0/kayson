@@ -8,6 +8,7 @@ import cn.zjh.kayson.module.system.convert.permission.MenuConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.MenuMapper;
 import cn.zjh.kayson.module.system.enums.permission.MenuTypeEnum;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -96,7 +97,7 @@ public class MenuServiceImpl implements MenuService {
         // 校验父菜单的有效性
         validateParentMenuEnable(id, parentId);
         // 校验菜单名的唯一性
-        validateParentMenuNameUnique(id, parentId, name);
+        validateMenuNameUnique(id, parentId, name);
     }
 
     private void validateMenuIdExist(Long id) {
@@ -109,7 +110,8 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
-    private void validateParentMenuEnable(Long id, Long parentId) {
+    @VisibleForTesting
+    void validateParentMenuEnable(Long id, Long parentId) {
         if (parentId == null || MenuDO.ID_ROOT.equals(parentId)) {
             return;
         }
@@ -129,7 +131,8 @@ public class MenuServiceImpl implements MenuService {
         }
     }
     
-    private void validateParentMenuNameUnique( Long id, Long parentId, String name) {
+    @VisibleForTesting
+    void validateMenuNameUnique(Long id, Long parentId, String name) {
         MenuDO menu = menuMapper.selectByParentIdAndName(parentId, name);
         if (menu == null) {
             return;
