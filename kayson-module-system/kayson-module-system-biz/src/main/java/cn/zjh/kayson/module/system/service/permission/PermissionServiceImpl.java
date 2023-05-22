@@ -64,7 +64,7 @@ public class PermissionServiceImpl implements PermissionService {
         Set<Long> roleIds = CollectionUtils.convertSet(userRoleDOList, UserRoleDO::getRoleId);
         List<RoleDO> roleDOList = roleService.getRoleList(roleIds);
         return CollectionUtils.convertSet(roleDOList, RoleDO::getId, roleDO -> 
-                CommonStatusEnum.ENABLE.getValue().equals(roleDO.getStatus()));
+                CommonStatusEnum.ENABLE.getStatus().equals(roleDO.getStatus()));
     }
 
     @Override

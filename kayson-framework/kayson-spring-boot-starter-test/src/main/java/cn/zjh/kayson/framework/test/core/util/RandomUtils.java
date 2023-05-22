@@ -85,7 +85,7 @@ public class RandomUtils {
     }
     
     public static Integer randomCommonStatus() {
-        return RandomUtil.randomEle(CommonStatusEnum.values()).getValue();
+        return RandomUtil.randomEle(CommonStatusEnum.values()).getStatus();
     }
     
     public static String randomEmail() {

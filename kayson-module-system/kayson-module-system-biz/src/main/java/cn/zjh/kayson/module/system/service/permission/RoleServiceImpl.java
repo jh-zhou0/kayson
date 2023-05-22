@@ -13,6 +13,7 @@ import cn.zjh.kayson.module.system.dal.mysql.permission.RoleMapper;
 import cn.zjh.kayson.module.system.enums.permission.DataScopeEnum;
 import cn.zjh.kayson.module.system.enums.permission.RoleCodeEnum;
 import cn.zjh.kayson.module.system.enums.permission.RoleTypeEnum;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -44,7 +45,7 @@ public class RoleServiceImpl implements RoleService {
         // 插入角色
         RoleDO role = RoleConvert.INSTANCE.convert(reqVO);
         role.setType(ObjectUtil.defaultIfNull(type, RoleTypeEnum.CUSTOM.getType()));
-        role.setStatus(CommonStatusEnum.ENABLE.getValue());
+        role.setStatus(CommonStatusEnum.ENABLE.getStatus());
         role.setDataScope(DataScopeEnum.ALL.getScope()); // 默认可查看所有数据。原因是，可能一些项目不需要数据权限
         roleMapper.insert(role);
         return role.getId();
@@ -66,7 +67,7 @@ public class RoleServiceImpl implements RoleService {
         // 校验角色存在
         validateRoleForUpdate(id);
         // 删除角色
-        roleMapper.selectById(id);
+        roleMapper.deleteById(id);
         // 删除角色相关数据
         permissionService.processRoleDeleted(id);
     }
@@ -97,7 +98,8 @@ public class RoleServiceImpl implements RoleService {
         return roleList.stream().anyMatch(roleDO -> RoleCodeEnum.isSuperAdmin(roleDO.getCode()));
     }
 
-    private void validateRoleForUpdate(Long id) {
+    @VisibleForTesting
+    void validateRoleForUpdate(Long id) {
         RoleDO role = roleMapper.selectById(id);
         if (role == null) {
             throw exception(ROLE_NOT_EXISTS);
@@ -118,7 +120,8 @@ public class RoleServiceImpl implements RoleService {
      * @param name 角色名字
      * @param code 角色编码
      */
-    private void validateRoleDuplicate(Long id, String name, String code) {
+    @VisibleForTesting
+    void validateRoleDuplicate(Long id, String name, String code) {
         // 0. 超级管理员，不允许创建
         if (RoleCodeEnum.isSuperAdmin(code)) {
             throw exception(ROLE_ADMIN_CODE_ERROR, code);

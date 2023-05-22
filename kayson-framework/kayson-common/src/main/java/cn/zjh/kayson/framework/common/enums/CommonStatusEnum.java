@@ -16,12 +16,12 @@ public enum CommonStatusEnum implements IntArrayValuable {
     ENABLE(0, "开启"),
     DISABLE(1, "关闭");
 
-    private static final int[] ARRAYS = Arrays.stream(values()).mapToInt(CommonStatusEnum::getValue).toArray();
+    private static final int[] ARRAYS = Arrays.stream(values()).mapToInt(CommonStatusEnum::getStatus).toArray();
 
     /**
      * 状态值
      */
-    private final Integer value;
+    private final Integer status;
 
     /**
      * 状态名

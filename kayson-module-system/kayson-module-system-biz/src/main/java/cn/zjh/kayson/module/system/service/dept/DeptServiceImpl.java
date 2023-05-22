@@ -123,7 +123,7 @@ public class DeptServiceImpl implements DeptService{
             throw exception(DEPT_PARENT_NOT_EXITS);
         }
         // 父部门被禁用
-        if (CommonStatusEnum.DISABLE.getValue().equals(dept.getStatus())) {
+        if (CommonStatusEnum.DISABLE.getStatus().equals(dept.getStatus())) {
             throw exception(DEPT_NOT_ENABLE);
         }
         // 父部门不能是原来的子部门

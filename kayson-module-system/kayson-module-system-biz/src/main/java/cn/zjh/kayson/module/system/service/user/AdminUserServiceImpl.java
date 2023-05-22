@@ -62,7 +62,7 @@ public class AdminUserServiceImpl implements AdminUserService {
                 reqVO.getDeptId(), reqVO.getPostIds());
         // 插入用户
         AdminUserDO user = UserConvert.INSTANCE.convert(reqVO);
-        user.setStatus(CommonStatusEnum.ENABLE.getValue()); // 默认开启
+        user.setStatus(CommonStatusEnum.ENABLE.getStatus()); // 默认开启
         user.setPassword(encodePassword(reqVO.getPassword())); // 加密密码
         adminUserMapper.insert(user);
         // 插入关联岗位

@@ -115,12 +115,12 @@ public class PostServiceImplTest extends BaseDbUnitTest {
     @Test
     void testGetPostPage() {
         // mock 数据
-        PostDO postDO = randomPojo(PostDO.class, o -> o.setName("码仔").setStatus(CommonStatusEnum.ENABLE.getValue()));
+        PostDO postDO = randomPojo(PostDO.class, o -> o.setName("码仔").setStatus(CommonStatusEnum.ENABLE.getStatus()));
         postMapper.insert(postDO);
         postMapper.insert(ObjectUtils.cloneIgnoreId(postDO, o -> o.setName("程序员")));
-        postMapper.insert(ObjectUtils.cloneIgnoreId(postDO, o -> o.setStatus(CommonStatusEnum.DISABLE.getValue())));
+        postMapper.insert(ObjectUtils.cloneIgnoreId(postDO, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus())));
         // 准备参数
-        PostPageReqVO reqVO = new PostPageReqVO().setName("码").setStatus(CommonStatusEnum.ENABLE.getValue());
+        PostPageReqVO reqVO = new PostPageReqVO().setName("码").setStatus(CommonStatusEnum.ENABLE.getStatus());
 
         // 调用
         PageResult<PostDO> pageResult = postService.getPostPage(reqVO);

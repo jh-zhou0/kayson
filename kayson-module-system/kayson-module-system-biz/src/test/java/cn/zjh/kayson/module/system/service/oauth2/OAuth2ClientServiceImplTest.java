@@ -138,17 +138,17 @@ public class OAuth2ClientServiceImplTest extends BaseDbUnitTest {
         // mock 数据
         OAuth2ClientDO dbOAuth2Client = randomPojo(OAuth2ClientDO.class, o -> { // 等会查询到
             o.setName("潜龙");
-            o.setStatus(CommonStatusEnum.ENABLE.getValue());
+            o.setStatus(CommonStatusEnum.ENABLE.getStatus());
         });
         oauth2ClientMapper.insert(dbOAuth2Client);
         // 测试 name 不匹配
         oauth2ClientMapper.insert(cloneIgnoreId(dbOAuth2Client, o -> o.setName("凤凰")));
         // 测试 status 不匹配
-        oauth2ClientMapper.insert(cloneIgnoreId(dbOAuth2Client, o -> o.setStatus(CommonStatusEnum.DISABLE.getValue())));
+        oauth2ClientMapper.insert(cloneIgnoreId(dbOAuth2Client, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus())));
         // 准备参数
         OAuth2ClientPageReqVO reqVO = new OAuth2ClientPageReqVO();
         reqVO.setName("龙");
-        reqVO.setStatus(CommonStatusEnum.ENABLE.getValue());
+        reqVO.setStatus(CommonStatusEnum.ENABLE.getStatus());
 
         // 调用
         PageResult<OAuth2ClientDO> pageResult = oauth2ClientService.getOAuth2ClientPage(reqVO);
@@ -162,9 +162,9 @@ public class OAuth2ClientServiceImplTest extends BaseDbUnitTest {
     void testValidOAuthClient() {
         // mock 数据
         OAuth2ClientDO client = randomPojo(OAuth2ClientDO.class).setClientId("default")
-                .setStatus(CommonStatusEnum.ENABLE.getValue());
+                .setStatus(CommonStatusEnum.ENABLE.getStatus());
         OAuth2ClientDO client02 = randomPojo(OAuth2ClientDO.class).setClientId("disable")
-                .setStatus(CommonStatusEnum.DISABLE.getValue());
+                .setStatus(CommonStatusEnum.DISABLE.getStatus());
         oauth2ClientMapper.insert(client);
         oauth2ClientMapper.insert(client02);
 

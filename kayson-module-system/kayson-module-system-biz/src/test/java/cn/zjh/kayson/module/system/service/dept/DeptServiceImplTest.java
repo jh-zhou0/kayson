@@ -39,13 +39,13 @@ public class DeptServiceImplTest extends BaseDbUnitTest {
     @Test
     void testGetDeptList() {
         // mock 数据
-        DeptDO dept = randomPojo(DeptDO.class, o -> o.setName("开发部").setStatus(CommonStatusEnum.ENABLE.getValue()));
+        DeptDO dept = randomPojo(DeptDO.class, o -> o.setName("开发部").setStatus(CommonStatusEnum.ENABLE.getStatus()));
         deptMapper.insert(dept);
         deptMapper.insert(ObjectUtils.cloneIgnoreId(dept, o -> o.setName("发")));
-        deptMapper.insert(ObjectUtils.cloneIgnoreId(dept, o -> o.setStatus(CommonStatusEnum.DISABLE.getValue())));
+        deptMapper.insert(ObjectUtils.cloneIgnoreId(dept, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus())));
         
         // 准备参数
-        DeptListReqVO reqVO = new DeptListReqVO().setName("开").setStatus(CommonStatusEnum.ENABLE.getValue());
+        DeptListReqVO reqVO = new DeptListReqVO().setName("开").setStatus(CommonStatusEnum.ENABLE.getStatus());
         
         // 调用
         List<DeptDO> deptList = deptService.getDeptList(reqVO);
@@ -114,7 +114,7 @@ public class DeptServiceImplTest extends BaseDbUnitTest {
     @Test
     void testValidateDept_notEnableForCreate() {
         // mock 数据
-        DeptDO deptDO = randomPojo(DeptDO.class, o ->o.setStatus(CommonStatusEnum.DISABLE.getValue()));
+        DeptDO deptDO = randomPojo(DeptDO.class, o ->o.setStatus(CommonStatusEnum.DISABLE.getStatus()));
         deptMapper.insert(deptDO); // @Sql: 先插入出一条存在的数据
         // 准备参数
         DeptCreateReqVO reqVO = randomPojo(DeptCreateReqVO.class, o ->
@@ -141,10 +141,10 @@ public class DeptServiceImplTest extends BaseDbUnitTest {
     @Test
     void testValidateDept_parentIsChildForUpdate() {
         // mock 数据
-        DeptDO parentDept = randomPojo(DeptDO.class, o -> o.setStatus(CommonStatusEnum.ENABLE.getValue()));
+        DeptDO parentDept = randomPojo(DeptDO.class, o -> o.setStatus(CommonStatusEnum.ENABLE.getStatus()));
         deptMapper.insert(parentDept);
         DeptDO childDept = randomPojo(DeptDO.class, o -> {
-            o.setStatus(CommonStatusEnum.ENABLE.getValue());
+            o.setStatus(CommonStatusEnum.ENABLE.getStatus());
             o.setParentId(parentDept.getId());
         });
         deptMapper.insert(childDept);

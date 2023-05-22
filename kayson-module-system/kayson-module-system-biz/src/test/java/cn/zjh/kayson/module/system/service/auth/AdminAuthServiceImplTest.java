@@ -72,7 +72,7 @@ public class AdminAuthServiceImplTest extends BaseDbUnitTest {
         String password = randomString();
         // mock user 数据
         AdminUserDO user = randomPojo(AdminUserDO.class, o -> o.setUsername(username)
-                .setPassword(password).setStatus(CommonStatusEnum.ENABLE.getValue()));
+                .setPassword(password).setStatus(CommonStatusEnum.ENABLE.getStatus()));
         Mockito.when(adminUserService.getUserByUsername(ArgumentMatchers.eq(username))).thenReturn(user);
         // mock password 匹配
         Mockito.when(adminUserService.isPasswordMatch(ArgumentMatchers.eq(password), 
@@ -105,7 +105,7 @@ public class AdminAuthServiceImplTest extends BaseDbUnitTest {
         String password = randomString();
         // mock user 数据
         AdminUserDO user = randomPojo(AdminUserDO.class, o -> o.setUsername(username)
-                .setPassword(password).setStatus(CommonStatusEnum.DISABLE.getValue()));
+                .setPassword(password).setStatus(CommonStatusEnum.DISABLE.getStatus()));
         when(adminUserService.getUserByUsername(eq(username))).thenReturn(user);
         // mock password 匹配
         when(adminUserService.isPasswordMatch(eq(password), eq(user.getPassword()))).thenReturn(true);
@@ -128,7 +128,7 @@ public class AdminAuthServiceImplTest extends BaseDbUnitTest {
         ReflectUtil.setFieldValue(authService, "captchaEnable", false);
         // mock user 数据
         AdminUserDO user = randomPojo(AdminUserDO.class, o -> o.setId(1L).setUsername("test_username")
-                .setPassword("test_password").setStatus(CommonStatusEnum.ENABLE.getValue()));
+                .setPassword("test_password").setStatus(CommonStatusEnum.ENABLE.getStatus()));
         when(adminUserService.getUserByUsername(eq("test_username"))).thenReturn(user);
         // mock password 匹配
         when(adminUserService.isPasswordMatch(eq("test_password"), eq(user.getPassword()))).thenReturn(true);
