@@ -1,6 +1,7 @@
 package cn.zjh.kayson.module.system.controller.admin.auth;
 
 import cn.hutool.core.util.StrUtil;
+import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.operatelog.core.annotations.OperateLog;
 import cn.zjh.kayson.framework.security.config.SecurityProperties;
@@ -14,6 +15,7 @@ import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import cn.zjh.kayson.module.system.enums.logger.LoginLogTypeEnum;
+import cn.zjh.kayson.module.system.enums.permission.MenuTypeEnum;
 import cn.zjh.kayson.module.system.service.auth.AdminAuthService;
 import cn.zjh.kayson.module.system.service.permission.PermissionService;
 import cn.zjh.kayson.module.system.service.permission.RoleService;
@@ -28,10 +30,12 @@ import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import static cn.zjh.kayson.framework.common.pojo.CommonResult.success;
+import static java.util.Collections.singleton;
 
 /**
  * @author zjh - kayson
@@ -95,10 +99,13 @@ public class AuthController {
             return null;
         }
         // 获得角色列表
-        Set<Long> roleIds = permissionService.getUserRoleIds(user.getId());
-        List<RoleDO> roleList = roleService.getRoleList(roleIds);
+        Set<Long> roleIds = permissionService.getUserRoleIdsFromCache(user.getId(),
+                singleton(CommonStatusEnum.ENABLE.getStatus()));
+        List<RoleDO> roleList = roleService.getRoleListFromCache(roleIds);
         // 获得菜单列表
-        List<MenuDO> menuList = permissionService.getRoleMenuList(roleList);
+        List<MenuDO> menuList = permissionService.getRoleMenuListFromCache(roleIds,
+                Arrays.asList(MenuTypeEnum.DIR.getType(), MenuTypeEnum.MENU.getType(), MenuTypeEnum.BUTTON.getType()),
+                singleton(CommonStatusEnum.ENABLE.getStatus())); // 只要开启的
         // 拼接结果返回
         return success(AuthConvert.INSTANCE.convert(user, roleList, menuList));
     }
@@ -107,10 +114,12 @@ public class AuthController {
     @Operation(summary = "获得登录用户的菜单列表")
     public CommonResult<List<AuthMenuRespVO>> getMenuList() {
         // 获得角色列表
-        Set<Long> roleIds = permissionService.getUserRoleIds(SecurityFrameworkUtils.getLoginUserId());
-        List<RoleDO> roleList = roleService.getRoleList(roleIds);
+        Set<Long> roleIds = permissionService.getUserRoleIdsFromCache(SecurityFrameworkUtils.getLoginUserId(), 
+                singleton(CommonStatusEnum.ENABLE.getStatus()));
         // 获得菜单列表
-        List<MenuDO> menuList = permissionService.getRoleMenuList(roleList);
+        List<MenuDO> menuList = permissionService.getRoleMenuListFromCache(roleIds,
+                Arrays.asList(MenuTypeEnum.DIR.getType(), MenuTypeEnum.MENU.getType()), // 只要目录和菜单类型
+                singleton(CommonStatusEnum.ENABLE.getStatus())); // 只要开启的
         // 转换成 Tree 结构返回
         return success(AuthConvert.INSTANCE.buildMenuTree(menuList));
     }
