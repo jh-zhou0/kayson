@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RolePageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleUpdateReqVO;
@@ -14,12 +15,17 @@ import cn.zjh.kayson.module.system.enums.permission.DataScopeEnum;
 import cn.zjh.kayson.module.system.enums.permission.RoleCodeEnum;
 import cn.zjh.kayson.module.system.enums.permission.RoleTypeEnum;
 import com.google.common.annotations.VisibleForTesting;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
@@ -30,14 +36,35 @@ import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
  * @author zjh - kayson
  */
 @Service
+@Slf4j
 public class RoleServiceImpl implements RoleService {
+
+    /**
+     * 角色缓存
+     * key：角色编号 {@link RoleDO#getId()}
+     *
+     * 这里声明 volatile 修饰的原因是，每次刷新时，直接修改指向
+     */
+    @Getter
+    private volatile Map<Long, RoleDO> roleCache;
     
     @Resource
     private RoleMapper roleMapper;
     
     @Resource
     private PermissionService permissionService;
-    
+
+    @Override
+    @PostConstruct
+    public void initLocalCache() {
+        // 第一步：查询数据
+        List<RoleDO> roleList = roleMapper.selectList();
+        log.info("[initLocalCache][缓存角色，数量为:{}]", roleList.size());
+        
+        // 第二步：构建缓存
+        roleCache = CollectionUtils.convertMap(roleList, RoleDO::getId);
+    }
+
     @Override
     public Long createRole(RoleCreateReqVO reqVO, Integer type) {
         // 校验角色名和编码
@@ -63,6 +90,15 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public void updateRoleStatus(Long id, Integer status) {
+        // 校验角色存在
+        validateRoleForUpdate(id);
+        // 更新状态
+        RoleDO updateObj = new RoleDO().setId(id).setStatus(status);
+        roleMapper.updateById(updateObj);
+    }
+
+    @Override
     public void deleteRole(Long id) {
         // 校验角色存在
         validateRoleForUpdate(id);
@@ -78,6 +114,11 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public RoleDO getRoleFromCache(Long id) {
+        return roleCache.get(id);
+    }
+
+    @Override
     public PageResult<RoleDO> getRolePage(RolePageReqVO reqVO) {
         return roleMapper.selectPage(reqVO);
     }
@@ -88,6 +129,22 @@ public class RoleServiceImpl implements RoleService {
             return Collections.emptyList();
         }
         return roleMapper.selectBatchIds(ids);
+    }
+
+    @Override
+    public List<RoleDO> getRoleListFromCache(Collection<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return Collections.emptyList();
+        }
+        return roleCache.values().stream().filter(roleDO -> ids.contains(roleDO.getId())).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<RoleDO> getRoleListByStatus(Collection<Integer> statuses) {
+        if (CollUtil.isEmpty(statuses)) {
+            return roleMapper.selectList();
+        }
+        return roleMapper.selectListByStatus(statuses);
     }
 
     @Override

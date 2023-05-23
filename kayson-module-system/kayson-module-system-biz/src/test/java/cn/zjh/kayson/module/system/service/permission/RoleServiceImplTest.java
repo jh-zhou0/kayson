@@ -17,6 +17,8 @@ import org.springframework.context.annotation.Import;
 import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static cn.zjh.kayson.framework.common.util.date.LocalDateTimeUtils.buildBetweenTime;
 import static cn.zjh.kayson.framework.common.util.date.LocalDateTimeUtils.buildTime;
@@ -44,6 +46,22 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
     
     @MockBean
     private PermissionService permissionService;
+
+    @Test
+    void testInitLocalCache() {
+        // mock 数据
+        RoleDO roleDO1 = randomPojo(RoleDO.class);
+        roleMapper.insert(roleDO1);
+        RoleDO roleDO2 = randomPojo(RoleDO.class);
+        roleMapper.insert(roleDO2);
+        
+        // 调用
+        roleService.initLocalCache();
+        // 断言 roleCache 缓存
+        Map<Long, RoleDO> roleCache = roleService.getRoleCache();
+        assertPojoEquals(roleDO1, roleCache.get(roleDO1.getId()));
+        assertPojoEquals(roleDO2, roleCache.get(roleDO2.getId()));
+    }
 
     @Test
     void testCreateRole_success() {
@@ -86,6 +104,11 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
         // 准备参数
         Long roleId = roleDO.getId();
         
+        // 调用
+        roleService.updateRoleStatus(roleId, CommonStatusEnum.DISABLE.getStatus());
+        // 断言
+        RoleDO role = roleMapper.selectById(roleId);
+        assertEquals(CommonStatusEnum.DISABLE.getStatus(), role.getStatus());
     }
 
     @Test
@@ -119,6 +142,21 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
     }
 
     @Test
+    void testGetRoleFromCache() {
+        // mock 数据（缓存）
+        RoleDO roleDO = randomPojo(RoleDO.class);
+        roleMapper.insert(roleDO);
+        roleService.initLocalCache();
+        // 参数准备
+        Long id = roleDO.getId();
+        
+        // 调用
+        RoleDO roleFromCache = roleService.getRoleFromCache(id);
+        // 断言
+        assertPojoEquals(roleDO, roleFromCache);
+    }
+
+    @Test
     void testGetRoleList_withIds() {
         // mock 数据
         RoleDO dbRole = randomPojo(RoleDO.class, o -> o.setStatus(CommonStatusEnum.ENABLE.getStatus()));
@@ -133,6 +171,40 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
         // 断言
         assertEquals(1, list.size());
         assertPojoEquals(dbRole, list.get(0));
+    }
+
+    @Test
+    void testGetRoleListFromCache() {
+        // mock 数据
+        RoleDO dbRole = randomPojo(RoleDO.class, o -> o.setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        roleMapper.insert(dbRole);
+        // 测试 id 不匹配
+        roleMapper.insert(cloneIgnoreId(dbRole, o -> {}));
+        roleService.initLocalCache();
+        
+        // 准备参数
+        Set<Long> roleIds = singleton(dbRole.getId());
+        
+        // 调用
+        List<RoleDO> roleListFromCache = roleService.getRoleListFromCache(roleIds);
+        //断言
+        assertEquals(1, roleListFromCache.size());
+        assertPojoEquals(dbRole, roleListFromCache.get(0));
+    }
+
+    @Test
+    void testGetRoleListByStatus_statusNotEmpty() {
+        // mock 数据
+        RoleDO dbRole = randomPojo(RoleDO.class, o -> o.setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        roleMapper.insert(dbRole);
+        // 测试 status 不匹配
+        roleMapper.insert(cloneIgnoreId(dbRole, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus())));
+        
+        // 调用
+        List<RoleDO> roleListByStatus = roleService.getRoleListByStatus(singleton(CommonStatusEnum.ENABLE.getStatus()));
+        // 断言
+        assertEquals(1, roleListByStatus.size());
+        assertPojoEquals(dbRole, roleListByStatus.get(0));
     }
 
     @Test

@@ -2,10 +2,13 @@ package cn.zjh.kayson.module.system.convert.permission;
 
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleRespVO;
+import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleSimpleRespVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author zjh - kayson
@@ -20,4 +23,6 @@ public interface RoleConvert {
     RoleDO convert(RoleUpdateReqVO bean);
 
     RoleRespVO convert(RoleDO bean);
+
+    List<RoleSimpleRespVO> convertList(List<RoleDO> list);
 }

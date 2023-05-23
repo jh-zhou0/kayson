@@ -7,6 +7,9 @@ import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RolePageR
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * @author zjh - kayson
  */
@@ -28,5 +31,9 @@ public interface RoleMapper extends BaseMapperX<RoleDO> {
                 .eqIfPresent(RoleDO::getStatus, reqVO.getStatus())
                 .betweenIfPresent(RoleDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(RoleDO::getId));
+    }
+
+    default List<RoleDO> selectListByStatus(Collection<Integer> statuses) {
+        return selectList(RoleDO::getStatus, statuses);
     }
 }
