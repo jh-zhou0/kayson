@@ -1,6 +1,8 @@
 package cn.zjh.kayson.module.system.service.permission;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuListReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuUpdateReqVO;
@@ -9,12 +11,18 @@ import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.MenuMapper;
 import cn.zjh.kayson.module.system.enums.permission.MenuTypeEnum;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
@@ -25,14 +33,55 @@ import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
  * @author zjh - kayson
  */
 @Service
+@Slf4j
 public class MenuServiceImpl implements MenuService {
+
+    /**
+     * 菜单缓存
+     * key：菜单编号
+     *
+     * 这里声明 volatile 修饰的原因是，每次刷新时，直接修改指向
+     */
+    @Getter
+    @Setter
+    private volatile Map<Long, MenuDO> menuCache;
+    /**
+     * 权限与菜单缓存
+     * key：权限 {@link MenuDO#getPermission()}
+     * value：MenuDO 数组，因为一个权限可能对应多个 MenuDO 对象
+     *
+     * 这里声明 volatile 修饰的原因是，每次刷新时，直接修改指向
+     */
+    @Getter
+    @Setter
+    private volatile Multimap<String, MenuDO> permissionMenuCache;
     
     @Resource
     private MenuMapper menuMapper;
     
     @Resource
     private PermissionService permissionService;
-    
+
+    @Override
+    @PostConstruct
+    public void initLocalCache() {
+        // 查询数据
+        List<MenuDO> menuList = menuMapper.selectList();
+        log.info("[initLocalCache][缓存菜单，数量为:{}]", menuList.size());
+
+        // 构建缓存
+        ImmutableMap.Builder<Long, MenuDO> menuCacheBuilder = ImmutableMap.builder();
+        ImmutableMultimap.Builder<String, MenuDO> permissionMenuCacheBuilder = ImmutableMultimap.builder();
+        menuList.forEach(menuDO -> {
+            menuCacheBuilder.put(menuDO.getId(), menuDO);
+            if (StrUtil.isNotEmpty(menuDO.getPermission())) { // 会存在 permission 为 null 的情况，导致 put 报 NPE 异常
+                permissionMenuCacheBuilder.put(menuDO.getPermission(), menuDO);
+            }
+        });
+        menuCache = menuCacheBuilder.build();
+        permissionMenuCache = permissionMenuCacheBuilder.build();
+    }
+
     @Override
     public Long createMenu(MenuCreateReqVO reqVO) {
         // 校验正确性
@@ -89,6 +138,37 @@ public class MenuServiceImpl implements MenuService {
             return Collections.emptyList();
         }
         return menuMapper.selectBatchIds(menuIds);
+    }
+
+    @Override
+    public List<MenuDO> getMenuListFromCache(Collection<Integer> menuTypes, Collection<Integer> menusStatuses) {
+        // 任一一个参数为空，则返回空
+        if (CollectionUtils.isAnyEmpty(menuTypes, menusStatuses)) {
+            return Collections.emptyList();
+        }
+        // 创建新数组，避免缓存被修改
+        return menuCache.values().stream().filter(menuDO -> menuTypes.contains(menuDO.getType())
+                && menusStatuses.contains(menuDO.getStatus())).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MenuDO> getMenuListFromCache(Collection<Long> menuIds, Collection<Integer> menuTypes, Collection<Integer> menusStatuses) {
+        // 任一一个参数为空，则返回空
+        if (CollectionUtils.isAnyEmpty(menuIds, menuTypes, menusStatuses)) {
+            return Collections.emptyList();
+        }
+        return menuCache.values().stream().filter(menuDO -> menuIds.contains(menuDO.getId())
+                && menuTypes.contains(menuDO.getType())
+                && menusStatuses.contains(menuDO.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MenuDO> getMenuListByPermissionFromCache(String permission) {
+        if (StrUtil.isEmpty(permission)) {
+            return Collections.emptyList();
+        }
+        return new ArrayList<>(permissionMenuCache.get(permission));
     }
 
     private void validateForCreateOrUpdate(Long id, Long parentId, String name) {

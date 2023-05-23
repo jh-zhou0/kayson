@@ -1,6 +1,7 @@
 package cn.zjh.kayson.module.system.service.permission;
 
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
+import cn.zjh.kayson.framework.common.util.collection.SetUtils;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuListReqVO;
@@ -8,13 +9,14 @@ import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuUpdat
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.MenuMapper;
 import cn.zjh.kayson.module.system.enums.permission.MenuTypeEnum;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static cn.zjh.kayson.framework.common.util.object.ObjectUtils.cloneIgnoreId;
 import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertPojoEquals;
@@ -39,7 +41,29 @@ public class MenuServiceImplTest extends BaseDbUnitTest {
     
     @MockBean
     private PermissionService permissionService;
-    
+
+    @Test
+    void testInitLocalCache() {
+        // mock 数据
+        MenuDO menuDO1 = randomPojo(MenuDO.class);
+        menuMapper.insert(menuDO1);
+        MenuDO menuDO2 = randomPojo(MenuDO.class);
+        menuMapper.insert(menuDO2);
+        
+        // 调用
+        menuService.initLocalCache();
+        // 校验 menuCache 缓存
+        Map<Long, MenuDO> menuCache = menuService.getMenuCache();
+        assertEquals(2, menuCache.size());
+        assertPojoEquals(menuDO1, menuCache.get(menuDO1.getId()));
+        assertPojoEquals(menuDO2, menuCache.get(menuDO2.getId()));
+        // 校验 permissionCache 缓存
+        Multimap<String, MenuDO> permissionMenuCache = menuService.getPermissionMenuCache();
+        assertEquals(2, permissionMenuCache.size());
+        assertPojoEquals(menuDO1, permissionMenuCache.get(menuDO1.getPermission()));
+        assertPojoEquals(menuDO2, permissionMenuCache.get(menuDO2.getPermission()));
+    }
+
     @Test
     void testCreateMenu_success() {
         // mock 数据（构造父菜单）
@@ -208,6 +232,87 @@ public class MenuServiceImplTest extends BaseDbUnitTest {
         MenuDO dbMenu = menuService.getMenu(id);
         // 断言
         assertPojoEquals(menu, dbMenu);
+    }
+
+    @Test
+    void testListMenusFromCache_withoutId() {
+        // mock 缓存
+        Map<Long, MenuDO> menuCache = new HashMap<>();
+        // 可被匹配
+        MenuDO menuDO = randomPojo(MenuDO.class, o -> o.setId(1L)
+                .setType(MenuTypeEnum.MENU.getType()).setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        menuCache.put(menuDO.getId(), menuDO);
+        // 测试 type 不匹配
+        menuCache.put(3L, randomPojo(MenuDO.class, o -> o.setId(3L)
+                .setType(MenuTypeEnum.BUTTON.getType()).setStatus(CommonStatusEnum.ENABLE.getStatus())));
+        // 测试 status 不匹配
+        menuCache.put(4L, randomPojo(MenuDO.class, o -> o.setId(4L)
+                .setType(MenuTypeEnum.MENU.getType()).setStatus(CommonStatusEnum.DISABLE.getStatus())));
+        menuService.setMenuCache(menuCache);
+
+        // 准备参数
+        Set<Integer> menuTypes = Collections.singleton(MenuTypeEnum.MENU.getType());
+        Set<Integer> menuStatuses = Collections.singleton(CommonStatusEnum.ENABLE.getStatus());
+        
+        // 调用
+        List<MenuDO> menuListFromCache = menuService.getMenuListFromCache(menuTypes, menuStatuses);
+        // 断言
+        assertEquals(1, menuListFromCache.size());
+        assertPojoEquals(menuDO, menuListFromCache.get(0));
+    }
+
+    @Test
+    void testListMenusFromCache_withId() {
+        // mock 缓存
+        Map<Long, MenuDO> menuCache = new HashMap<>();
+        // 可被匹配
+        MenuDO menuDO = randomPojo(MenuDO.class, o -> o.setId(1L)
+                .setType(MenuTypeEnum.MENU.getType()).setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        menuCache.put(menuDO.getId(), menuDO);
+        // 测试 id 不匹配
+        menuCache.put(2L, randomPojo(MenuDO.class, o -> o.setId(2L)
+                .setType(MenuTypeEnum.MENU.getType()).setStatus(CommonStatusEnum.ENABLE.getStatus())));
+        // 测试 type 不匹配
+        menuCache.put(3L, randomPojo(MenuDO.class, o -> o.setId(3L)
+                .setType(MenuTypeEnum.BUTTON.getType()).setStatus(CommonStatusEnum.ENABLE.getStatus())));
+        // 测试 status 不匹配
+        menuCache.put(4L, randomPojo(MenuDO.class, o -> o.setId(4L)
+                .setType(MenuTypeEnum.MENU.getType()).setStatus(CommonStatusEnum.DISABLE.getStatus())));
+        menuService.setMenuCache(menuCache);
+        
+        // 准备参数
+        Set<Long> menuIds = SetUtils.asSet(1L, 3L, 4L);
+        Set<Integer> menuTypes = Collections.singleton(MenuTypeEnum.MENU.getType());
+        Set<Integer> menuStatuses = Collections.singleton(CommonStatusEnum.ENABLE.getStatus());
+        
+        // 调用
+        List<MenuDO> menuListFromCache = menuService.getMenuListFromCache(menuIds, menuTypes, menuStatuses);
+        // 断言
+        assertEquals(1, menuListFromCache.size());
+        assertPojoEquals(menuDO, menuListFromCache.get(0));
+    }
+
+    @Test
+    void testGetMenuListByPermissionFromCache() {
+        // mock 缓存
+        Multimap<String, MenuDO> permissionMenuCache = LinkedListMultimap.create();
+        // 可被匹配
+        MenuDO menuDO01 = randomPojo(MenuDO.class, o -> o.setId(1L).setPermission("123"));
+        permissionMenuCache.put(menuDO01.getPermission(), menuDO01);
+        MenuDO menuDO02 = randomPojo(MenuDO.class, o -> o.setId(2L).setPermission("123"));
+        permissionMenuCache.put(menuDO02.getPermission(), menuDO02);
+        // 不可匹配
+        permissionMenuCache.put("456", randomPojo(MenuDO.class, o -> o.setId(3L).setPermission("456")));
+        menuService.setPermissionMenuCache(permissionMenuCache);
+        // 准备参数
+        String permission = "123";
+        
+        // 调用
+        List<MenuDO> menuListByPermissionFromCache = menuService.getMenuListByPermissionFromCache(permission);
+        // 断言
+        assertEquals(2, menuListByPermissionFromCache.size());
+        assertPojoEquals(menuDO01, menuListByPermissionFromCache.get(0));
+        assertPojoEquals(menuDO02, menuListByPermissionFromCache.get(1));
     }
 
     @Test
