@@ -8,22 +8,23 @@ import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleMenuDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.UserRoleDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.RoleMenuMapper;
 import cn.zjh.kayson.module.system.dal.mysql.permission.UserRoleMapper;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static cn.zjh.kayson.framework.common.util.collection.SetUtils.asSet;
 import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertPojoEquals;
 import static cn.zjh.kayson.framework.test.core.util.RandomUtils.*;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.when;
@@ -48,6 +49,118 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
     
     @MockBean
     private MenuService menuService;
+
+    @Test
+    void testInitLocalCacheForUserRole() {
+        // mock 数据
+        UserRoleDO userRoleDO01 = randomPojo(UserRoleDO.class, o -> o.setUserId(1L).setRoleId(10L));
+        userRoleMapper.insert(userRoleDO01);
+        UserRoleDO roleMenuDO02 = randomPojo(UserRoleDO.class, o -> o.setUserId(1L).setRoleId(20L));
+        userRoleMapper.insert(roleMenuDO02);
+        
+        // 调用
+        permissionService.initLocalCacheForUserRole();
+        // 断言 userRoleCache 缓存
+        Multimap<Long, Long> userRoleCache = permissionService.getUserRoleCache();
+        assertEquals(1, userRoleCache.keySet().size());
+        assertEquals(Arrays.asList(10L, 20L), userRoleCache.get(1L));
+    }
+
+    @Test
+    void testInitLocalCacheForRoleMenu() {
+        // mock 数据
+        RoleMenuDO roleMenuDO01 = randomPojo(RoleMenuDO.class, o -> o.setRoleId(1L).setMenuId(10L));
+        roleMenuMapper.insert(roleMenuDO01);
+        RoleMenuDO roleMenuDO02 = randomPojo(RoleMenuDO.class, o -> o.setRoleId(1L).setMenuId(20L));
+        roleMenuMapper.insert(roleMenuDO02);
+        
+        // 调用
+        permissionService.initLocalCacheForRoleMenu();
+        // 断言 roleMenuCache 缓存
+        Multimap<Long, Long> roleMenuCache = permissionService.getRoleMenuCache();
+        assertEquals(1L, roleMenuCache.keySet().size());
+        assertEquals(Arrays.asList(10L, 20L), roleMenuCache.get(1L));
+        // 断言 menuRoleCache 缓存
+        Multimap<Long, Long> menuRoleCache = permissionService.getMenuRoleCache();
+        assertEquals(2L, menuRoleCache.keySet().size());
+        assertEquals(singletonList(1L), menuRoleCache.get(10L));
+        assertEquals(singletonList(1L), menuRoleCache.get(20L));
+    }
+
+    @Test
+    void testGetUserRoleIds() {
+        // 准备参数
+        Long userId = 1L;
+        // mock 数据
+        UserRoleDO userRoleDO01 = randomPojo(UserRoleDO.class, o -> o.setUserId(1L).setRoleId(10L));
+        userRoleMapper.insert(userRoleDO01);
+        UserRoleDO roleMenuDO02 = randomPojo(UserRoleDO.class, o -> o.setUserId(1L).setRoleId(20L));
+        userRoleMapper.insert(roleMenuDO02);
+
+        // 调用
+        Set<Long> result = permissionService.getUserRoleIds(userId);
+        // 断言
+        assertEquals(asSet(10L, 20L), result);
+    }
+
+    @Test
+    void testGetUserRoleIdsFromCache() {
+        // 准备参数
+        Long userId = 1L;
+        Collection<Integer> roleStatuses = singleton(CommonStatusEnum.ENABLE.getStatus());
+        // mock 方法
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 10L).put(1L, 20L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        RoleDO roleDO01 = randomPojo(RoleDO.class, o -> o.setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleFromCache(eq(10L))).thenReturn(roleDO01);
+        RoleDO roleDO02 = randomPojo(RoleDO.class, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus()));
+        when(roleService.getRoleFromCache(eq(20L))).thenReturn(roleDO02);
+
+        // 调用
+        Set<Long> roleIds = permissionService.getUserRoleIdsFromCache(userId, roleStatuses);
+        // 断言
+        assertEquals(asSet(10L), roleIds);
+    }
+
+    @Test
+    void testGetRoleMenuListFromCache_superAdmin() {
+        // 准备参数
+        Collection<Long> roleIds = singleton(100L);
+        Collection<Integer> menuTypes = asList(2, 3);
+        Collection<Integer> menuStatuses = asList(0, 1);
+        // mock 方法
+        List<RoleDO> roleList = singletonList(randomPojo(RoleDO.class, o -> o.setId(100L)));
+        when(roleService.getRoleListFromCache(eq(roleIds))).thenReturn(roleList);
+        when(roleService.hasAnySuperAdmin(same(roleList))).thenReturn(true);
+        List<MenuDO> menuList = randomPojoList(MenuDO.class);
+        when(menuService.getMenuListFromCache(eq(menuTypes), eq(menuStatuses))).thenReturn(menuList);
+
+        // 调用
+        List<MenuDO> menuDOList = permissionService.getRoleMenuListFromCache(roleIds, menuTypes, menuStatuses);
+        // 断言
+        assertEquals(menuList, menuDOList);
+    }
+
+    @Test
+    void testGetRoleMenuListFromCache_normal() {
+        // 准备参数
+        Collection<Long> roleIds = asSet(1L, 2L);
+        Collection<Integer> menuTypes = asList(2, 3);
+        Collection<Integer> menuStatuses = asList(0, 1);
+        // mock 方法
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> roleMenuCache = builder.put(1L, 10L).put(1L, 11L).put(2L, 22L).build();
+        permissionService.setRoleMenuCache(roleMenuCache);
+        List<MenuDO> menuList = randomPojoList(MenuDO.class);
+        when(menuService.getMenuListFromCache(eq(Arrays.asList(10L, 11L, 22L)), eq(menuTypes), 
+                eq(menuStatuses))).thenReturn(menuList);
+
+        // 调用
+        List<MenuDO> menuDOList = permissionService.getRoleMenuListFromCache(roleIds, menuTypes, menuStatuses);
+        // 断言
+        assertEquals(menuList, menuDOList);
+    }
 
     @Test
     void testGetRoleMenuList_superAdmin() {
@@ -91,38 +204,11 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
     }
 
     @Test
-    void testGetUserRoleIds() {
-        // 准备参数
-        Long userId = 1L;
-        Set<Long> roleIds = asSet(100L, 101L);
-        
-        // mock 数据
-        List<UserRoleDO> userRoleDOList = Arrays.asList(
-                randomPojo(UserRoleDO.class, o -> o.setUserId(1L).setRoleId(100L)),
-                randomPojo(UserRoleDO.class, o -> o.setUserId(1L).setRoleId(101L))
-        );
-        userRoleMapper.insertBatch(userRoleDOList);
-        
-        // mock 方法
-        List<RoleDO> roleDOList = Arrays.asList(
-                randomPojo(RoleDO.class, o -> o.setId(100L).setStatus(CommonStatusEnum.ENABLE.getStatus())), 
-                randomPojo(RoleDO.class, o -> o.setId(101L).setStatus(CommonStatusEnum.ENABLE.getStatus()))
-        );
-        when(roleService.getRoleList(roleIds)).thenReturn(roleDOList);
-        
-        // 调用
-        Set<Long> userRoleIds = permissionService.getUserRoleIds(userId);
-        // 断言
-        assertEquals(roleIds, userRoleIds);
-    }
-
-    @Test
     void testGetRoleMenuIds_superAdmin() {
         // 准备参数
         Long roleId = 100L;
         // mock 方法
-        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setId(100L).setCode("super_admin"));
-        when(roleService.getRole(eq(100L))).thenReturn(roleDO);
+        when(roleService.hasAnySuperAdmin(eq(singleton(roleId)))).thenReturn(true);
         List<MenuDO> menuList = singletonList(randomPojo(MenuDO.class).setId(1L));
         when(menuService.getMenuList()).thenReturn(menuList);
 
@@ -137,7 +223,6 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
         // 准备参数
         Long roleId = 100L;
         // mock 数据
-        when(roleService.getRole(eq(100L))).thenReturn(randomPojo(RoleDO.class, o -> o.setId(100L)));
         RoleMenuDO roleMenu01 = randomPojo(RoleMenuDO.class).setRoleId(100L).setMenuId(1L);
         roleMenuMapper.insert(roleMenu01);
         RoleMenuDO roleMenu02 = randomPojo(RoleMenuDO.class).setRoleId(100L).setMenuId(2L);
@@ -258,21 +343,84 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
 
     @Test
     void testHasAnyPermissions_superAdmin() {
-       
+        // 准备参数
+        Long userId = 1L;
+        String[] permissions = new String[]{"system:user:query", "system:user:create"};
+        // mock 用户与角色的缓存
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 10L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        // mock 方法
+        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setId(10L).setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleFromCache(eq(10L))).thenReturn(roleDO);
+        when(roleService.hasAnySuperAdmin(eq(singleton(10L)))).thenReturn(true);
+        
+        // 调用
+        boolean has = permissionService.hasAnyPermissions(userId, permissions);
+        // 断言
+        assertTrue(has);
     }
 
     @Test
     void testHasAnyPermissions_normal() {
-        
+        // 准备参数
+        Long userId = 1L;
+        String[] permissions = new String[]{"system:user:query", "system:user:create"};
+        // mock 用户与角色的缓存
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 10L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        // mock 方法
+        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setId(10L).setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleFromCache(eq(10L))).thenReturn(roleDO);
+        MenuDO menuDO = randomPojo(MenuDO.class, o -> o.setId(100L));
+        when(menuService.getMenuListByPermissionFromCache(eq("system:user:query"))).thenReturn(singletonList(menuDO));
+        permissionService.setMenuRoleCache(ImmutableMultimap.<Long, Long>builder().put(100L, 10L).build());
+
+        // 调用
+        boolean has = permissionService.hasAnyPermissions(userId, permissions);
+        // 断言
+        assertTrue(has);
     }
 
     @Test
     void testHasAnyRoles_superAdmin() {
+        // 准备参数
+        Long userId = 1L;
+        String[] roles = new String[]{"admin", "common"};
+        // mock 用户与角色的缓存
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 10L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        // mock 方法
+        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setId(10L).setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleFromCache(eq(10L))).thenReturn(roleDO);
+        when(roleService.hasAnySuperAdmin(eq(singleton(10L)))).thenReturn(true);
         
+        // 调用
+        boolean has = permissionService.hasAnyRoles(userId, roles);
+        // 断言
+        assertTrue(has);
     }
 
     @Test
     void testHasAnyRoles_normal() {
-        
+        // 准备参数
+        Long userId = 1L;
+        String[] roles = new String[]{"admin", "common"};
+        // mock 用户与角色的缓存
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 10L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        // mock 方法
+        RoleDO roleDO = randomPojo(RoleDO.class, o ->
+                o.setId(10L).setCode("admin").setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleFromCache(eq(10L))).thenReturn(roleDO);
+        when(roleService.getRoleListFromCache(eq(singleton(10L)))).thenReturn(singletonList(roleDO));
+
+        // 调用
+        boolean has = permissionService.hasAnyRoles(userId, roles);
+        // 断言
+        assertTrue(has);
     }
 }
