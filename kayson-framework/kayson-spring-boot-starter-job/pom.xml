@@ -8,31 +8,34 @@
         <groupId>cn.zjh.boot</groupId>
         <version>${revision}</version>
     </parent>
-    <artifactId>kayson-spring-boot-starter-captcha</artifactId>
+    <artifactId>kayson-spring-boot-starter-job</artifactId>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
-    <description>
-        验证码拓展: 基于 aj-captcha 实现滑块验证码，文档：https://ajcaptcha.beliefteam.cn/captcha-doc/
+    <description>任务拓展
+        1. 定时任务，基于 Quartz 拓展
+        2. 异步任务，基于 Spring Async 拓展
     </description>
+    <url>https://github.com/jh-zhou0/kayson</url>
     
     <dependencies>
         <dependency>
-            <groupId>com.xingyuv</groupId>
-            <artifactId>spring-boot-starter-captcha-plus</artifactId>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-common</artifactId>
         </dependency>
 
-        <!-- Spring 核心 -->
+        <!-- Job 定时任务相关 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
         </dependency>
 
-        <!-- DB 相关 -->
+        <!-- 工具类相关 -->
         <dependency>
-            <groupId>cn.zjh.boot</groupId>
-            <artifactId>kayson-spring-boot-starter-redis</artifactId>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
+        
     </dependencies>
 
 </project>

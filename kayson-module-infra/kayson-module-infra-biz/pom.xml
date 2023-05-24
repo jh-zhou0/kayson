@@ -47,6 +47,12 @@
             <artifactId>kayson-spring-boot-starter-redis</artifactId>
         </dependency>
 
+        <!-- Job 定时任务相关，异步任务 -->
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-spring-boot-starter-job</artifactId>
+        </dependency>
+
         <!-- Test 测试相关 -->
         <dependency>
             <groupId>cn.zjh.boot</groupId>
