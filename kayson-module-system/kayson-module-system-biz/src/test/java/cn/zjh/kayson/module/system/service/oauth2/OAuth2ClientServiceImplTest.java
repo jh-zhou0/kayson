@@ -1,5 +1,6 @@
 package cn.zjh.kayson.module.system.service.oauth2;
 
+import cn.hutool.core.map.MapUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Import;
 
 import javax.annotation.Resource;
 import java.util.Collections;
+import java.util.Map;
 
 import static cn.zjh.kayson.framework.common.util.object.ObjectUtils.cloneIgnoreId;
 import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertPojoEquals;
@@ -32,6 +34,23 @@ public class OAuth2ClientServiceImplTest extends BaseDbUnitTest {
 
     @Resource
     private OAuth2ClientMapper oauth2ClientMapper;
+
+    @Test
+    void testInitLocalCache() {
+        // mock 数据
+        OAuth2ClientDO clientDO1 = randomPojo(OAuth2ClientDO.class);
+        oauth2ClientMapper.insert(clientDO1);
+        OAuth2ClientDO clientDO2 = randomPojo(OAuth2ClientDO.class);
+        oauth2ClientMapper.insert(clientDO2);
+        
+        // 调用
+        oauth2ClientService.initLocalCache();
+        // 断言 clientCache 缓存
+        Map<String, OAuth2ClientDO> clientCache = oauth2ClientService.getClientCache();
+        assertEquals(2, clientCache.size());
+        assertPojoEquals(clientDO1, clientCache.get(clientDO1.getClientId()));
+        assertPojoEquals(clientDO2, clientCache.get(clientDO2.getClientId()));
+    }
 
     @Test
     void testCreateOAuth2Client_success() {
@@ -159,34 +178,35 @@ public class OAuth2ClientServiceImplTest extends BaseDbUnitTest {
     }
 
     @Test
-    void testValidOAuthClient() {
+    void testValidOAuthClientFromCache() {
         // mock 数据
         OAuth2ClientDO client = randomPojo(OAuth2ClientDO.class).setClientId("default")
                 .setStatus(CommonStatusEnum.ENABLE.getStatus());
         OAuth2ClientDO client02 = randomPojo(OAuth2ClientDO.class).setClientId("disable")
                 .setStatus(CommonStatusEnum.DISABLE.getStatus());
-        oauth2ClientMapper.insert(client);
-        oauth2ClientMapper.insert(client02);
+        Map<String, OAuth2ClientDO> clientCache = MapUtil.<String, OAuth2ClientDO>builder()
+                .put(client.getClientId(), client).put(client02.getClientId(), client02).build();
+        oauth2ClientService.setClientCache(clientCache);
 
         // 调用，并断言
-        assertServiceException(() -> oauth2ClientService.validOAuthClient(randomString(), 
+        assertServiceException(() -> oauth2ClientService.validOAuthClientFromCache(randomString(), 
                 null, null, null, null), OAUTH2_CLIENT_NOT_EXISTS);
-        assertServiceException(() -> oauth2ClientService.validOAuthClient("disable",
+        assertServiceException(() -> oauth2ClientService.validOAuthClientFromCache("disable",
                 null, null, null, null), OAUTH2_CLIENT_DISABLE);
-        assertServiceException(() -> oauth2ClientService.validOAuthClient("default",
+        assertServiceException(() -> oauth2ClientService.validOAuthClientFromCache("default",
                 randomString(), null, null, null), OAUTH2_CLIENT_CLIENT_SECRET_ERROR);
-        assertServiceException(() -> oauth2ClientService.validOAuthClient("default",
+        assertServiceException(() -> oauth2ClientService.validOAuthClientFromCache("default",
                 null, randomString(), null, null), OAUTH2_CLIENT_AUTHORIZED_GRANT_TYPE_NOT_EXISTS);
-        assertServiceException(() -> oauth2ClientService.validOAuthClient("default",
+        assertServiceException(() -> oauth2ClientService.validOAuthClientFromCache("default",
                 null, null, Collections.singleton(randomString()), null), OAUTH2_CLIENT_SCOPE_OVER);
-        assertServiceException(() -> oauth2ClientService.validOAuthClient("default",
+        assertServiceException(() -> oauth2ClientService.validOAuthClientFromCache("default",
                 null, null, null, "test"), OAUTH2_CLIENT_REDIRECT_URI_NOT_MATCH, "test");
         // 成功调用（1：参数完整）
-        OAuth2ClientDO result = oauth2ClientService.validOAuthClient(client.getClientId(), client.getSecret(),
+        OAuth2ClientDO result = oauth2ClientService.validOAuthClientFromCache(client.getClientId(), client.getSecret(),
                 client.getAuthorizedGrantTypes().get(0), client.getScopes(), client.getRedirectUris().get(0));
         assertPojoEquals(client, result);
         // 成功调用（2：只有 clientId 参数）
-        result = oauth2ClientService.validOAuthClient(client.getClientId());
+        result = oauth2ClientService.validOAuthClientFromCache(client.getClientId());
         assertPojoEquals(client, result);
     }
 }

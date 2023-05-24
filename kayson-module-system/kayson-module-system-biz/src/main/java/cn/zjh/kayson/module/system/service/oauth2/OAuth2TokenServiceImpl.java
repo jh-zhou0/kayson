@@ -42,7 +42,8 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
     @Override
     @Transactional
     public OAuth2AccessTokenDO createAccessToken(Long userId, Integer userType, String clientId, List<String> scopes) {
-        OAuth2ClientDO client = oAuth2ClientService.validOAuthClient(clientId);
+        // 校验客户端
+        OAuth2ClientDO client = oAuth2ClientService.validOAuthClientFromCache(clientId);
         // 创建刷新令牌
         OAuth2RefreshTokenDO refreshTokenDO = createOAuth2RefreshToken(userId, userType, client, scopes);
         // 创建访问令牌
@@ -99,7 +100,7 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
             throw exception0(GlobalErrorCodeConstants.BAD_REQUEST.getCode(), "无效的刷新令牌");
         }
         // 校验 Client 匹配
-        OAuth2ClientDO client = oAuth2ClientService.validOAuthClient(clientId);
+        OAuth2ClientDO client = oAuth2ClientService.validOAuthClientFromCache(clientId);
         if (ObjectUtil.notEqual(clientId, refreshTokenDO.getClientId())) {
             throw exception0(GlobalErrorCodeConstants.BAD_REQUEST.getCode(), "刷新令牌的客户端编号不正确");
         }

@@ -5,6 +5,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.oauth2.vo.OAuth2ClientCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.oauth2.vo.OAuth2ClientPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.oauth2.vo.OAuth2ClientUpdateReqVO;
@@ -12,10 +13,16 @@ import cn.zjh.kayson.module.system.convert.oauth2.OAuth2ClientConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
 import cn.zjh.kayson.module.system.dal.mysql.oauth2.OAuth2ClientMapper;
 import com.google.common.annotations.VisibleForTesting;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
@@ -26,11 +33,33 @@ import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
  * @author zjh - kayson
  */
 @Service
+@Slf4j
 public class OAuth2ClientServiceImpl implements OAuth2ClientService {
+
+    /**
+     * 客户端缓存
+     * key：客户端编号 {@link OAuth2ClientDO#getClientId()} ()}
+     *
+     * 这里声明 volatile 修饰的原因是，每次刷新时，直接修改指向
+     */
+    @Getter // 解决单测
+    @Setter // 解决单测
+    private volatile Map<String, OAuth2ClientDO> clientCache;
     
     @Resource
     private OAuth2ClientMapper oAuth2ClientMapper;
-    
+
+    @Override
+    @PostConstruct
+    public void initLocalCache() {
+        // 查询数据
+        List<OAuth2ClientDO> clientList = oAuth2ClientMapper.selectList();
+        log.info("[initLocalCache][缓存 OAuth2 客户端，数量为:{}]", clientList.size());
+        
+        // 构建缓存
+        clientCache = CollectionUtils.convertMap(clientList, OAuth2ClientDO::getClientId);
+    }
+
     @Override
     public Long createOAuth2Client(OAuth2ClientCreateReqVO createReqVO) {
         // 校验 Client 未被占用
@@ -71,10 +100,10 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
     }
 
     @Override
-    public OAuth2ClientDO validOAuthClient(String clientId, String clientSecret, String authorizedGrantType, 
-                                           Collection<String> scopes, String redirectUri) {
+    public OAuth2ClientDO validOAuthClientFromCache(String clientId, String clientSecret, String authorizedGrantType,
+                                                    Collection<String> scopes, String redirectUri) {
         // 校验客户端存在、且开启
-        OAuth2ClientDO client = oAuth2ClientMapper.selectByClientId(clientId);
+        OAuth2ClientDO client = clientCache.get(clientId);
         if (client == null) {
             throw exception(OAUTH2_CLIENT_NOT_EXISTS);
         }
@@ -86,7 +115,7 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
             throw exception(OAUTH2_CLIENT_CLIENT_SECRET_ERROR);
         }
         // 校验授权方式
-        if (StrUtil.isNotEmpty(authorizedGrantType) 
+        if (StrUtil.isNotEmpty(authorizedGrantType)
                 && !CollUtil.contains(client.getAuthorizedGrantTypes(), authorizedGrantType)) {
             throw exception(OAUTH2_CLIENT_AUTHORIZED_GRANT_TYPE_NOT_EXISTS);
         }
@@ -95,9 +124,8 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
             throw exception(OAUTH2_CLIENT_SCOPE_OVER);
         }
         // 校验回调地址
-        String redirectUris = client.getRedirectUris().toString();
-        if (StrUtil.isNotEmpty(redirectUri) 
-                && !StrUtil.startWithAny(redirectUri, redirectUris.substring(1, redirectUri.length() - 1))) {
+        String[] redirectUris = client.getRedirectUris().toArray(new String[0]);
+        if (StrUtil.isNotEmpty(redirectUri) && !StrUtil.startWithAny(redirectUri, redirectUris)) {
             throw exception(OAUTH2_CLIENT_REDIRECT_URI_NOT_MATCH, redirectUri);
         }
         return client;
