@@ -20,6 +20,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 
@@ -77,6 +78,7 @@ public class PermissionServiceImpl implements PermissionService {
     private MenuService menuService;
 
     @Override
+    @PostConstruct
     public void initLocalCache() {
         initLocalCacheForUserRole();
         initLocalCacheForRoleMenu();
