@@ -12,6 +12,7 @@ import cn.zjh.kayson.module.system.dal.mysql.oauth2.OAuth2AccessTokenMapper;
 import cn.zjh.kayson.module.system.dal.mysql.oauth2.OAuth2RefreshTokenMapper;
 import cn.zjh.kayson.module.system.dal.redis.oauth2.OAuth2AccessTokenRedisDAO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -39,6 +40,7 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
     private OAuth2AccessTokenRedisDAO oAuth2AccessTokenRedisDAO;
     
     @Override
+    @Transactional
     public OAuth2AccessTokenDO createAccessToken(Long userId, Integer userType, String clientId, List<String> scopes) {
         OAuth2ClientDO client = oAuth2ClientService.validOAuthClient(clientId);
         // 创建刷新令牌

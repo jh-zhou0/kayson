@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -114,6 +115,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void assignUserRole(Long userId, Set<Long> roleIds) {
         // 获得用户拥有角色编号
         Set<Long> dbRoleIds = CollectionUtils.convertSet(
@@ -156,6 +158,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void assignRoleMenu(Long roleId, Set<Long> menuIds) {
         // 获得角色拥有菜单编号
         Set<Long> dbMenuIds = CollectionUtils.convertSet(
@@ -222,16 +225,19 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void processUserDeleted(Long userId) {
         userRoleMapper.deleteListByUserId(userId);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void processMenuDeleted(Long menuId) {
         roleMenuMapper.deleteListByMenuId(menuId);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void processRoleDeleted(Long roleId) {
         userRoleMapper.deleteListByRoleId(roleId);
         roleMenuMapper.deleteListByRoleId(roleId);

@@ -22,6 +22,7 @@ import cn.zjh.kayson.module.system.service.permission.PermissionService;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.io.InputStream;
@@ -61,6 +62,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     private PasswordEncoder passwordEncoder;
     
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long createUser(UserCreateReqVO reqVO) {
         // 校验正确性
         validateUserForCreateOrUpdate(null, reqVO.getUsername(), reqVO.getMobile(), reqVO.getEmail(),
@@ -80,6 +82,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateUser(UserUpdateReqVO reqVO) {
         // 校验正确性
         validateUserForCreateOrUpdate(reqVO.getId(), reqVO.getUsername(), reqVO.getMobile(), reqVO.getEmail(), 
@@ -111,6 +114,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteUser(Long id) {
         validateUserExists(id);
         // 删除用户

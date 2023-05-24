@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -104,6 +105,7 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteMenu(Long id) {
         // 校验是否还有子菜单
         if (menuMapper.selectCountByParentId(id) > 0) {
