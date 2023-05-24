@@ -59,7 +59,7 @@ public class OAuth2TokenServiceImplTest extends BaseDbAndRedisUnitTest {
         // mock 方法
         OAuth2ClientDO clientDO = randomPojo(OAuth2ClientDO.class).setClientId(clientId)
                 .setAccessTokenValiditySeconds(30).setRefreshTokenValiditySeconds(60);
-        when(oauth2ClientService.validOAuthClient(eq(clientId))).thenReturn(clientDO);
+        when(oauth2ClientService.validOAuthClientFromCache(eq(clientId))).thenReturn(clientDO);
 
         // 调用
         OAuth2AccessTokenDO accessTokenDO = oauth2TokenService.createAccessToken(userId, userType, clientId, scopes);
@@ -98,7 +98,7 @@ public class OAuth2TokenServiceImplTest extends BaseDbAndRedisUnitTest {
         String clientId = randomString();
         // mock 方法
         OAuth2ClientDO clientDO = randomPojo(OAuth2ClientDO.class).setClientId(clientId);
-        when(oauth2ClientService.validOAuthClient(eq(clientId))).thenReturn(clientDO);
+        when(oauth2ClientService.validOAuthClientFromCache(eq(clientId))).thenReturn(clientDO);
         // mock 数据（刷新令牌）
         OAuth2RefreshTokenDO refreshTokenDO = randomPojo(OAuth2RefreshTokenDO.class)
                 .setRefreshToken(refreshToken).setClientId("error");
@@ -116,7 +116,7 @@ public class OAuth2TokenServiceImplTest extends BaseDbAndRedisUnitTest {
         String clientId = randomString();
         // mock 方法
         OAuth2ClientDO clientDO = randomPojo(OAuth2ClientDO.class).setClientId(clientId);
-        when(oauth2ClientService.validOAuthClient(eq(clientId))).thenReturn(clientDO);
+        when(oauth2ClientService.validOAuthClientFromCache(eq(clientId))).thenReturn(clientDO);
         // mock 数据（刷新令牌）
         OAuth2RefreshTokenDO refreshTokenDO = randomPojo(OAuth2RefreshTokenDO.class)
                 .setRefreshToken(refreshToken).setClientId(clientId)
@@ -137,7 +137,7 @@ public class OAuth2TokenServiceImplTest extends BaseDbAndRedisUnitTest {
         // mock 方法
         OAuth2ClientDO clientDO = randomPojo(OAuth2ClientDO.class).setClientId(clientId)
                 .setAccessTokenValiditySeconds(30);
-        when(oauth2ClientService.validOAuthClient(eq(clientId))).thenReturn(clientDO);
+        when(oauth2ClientService.validOAuthClientFromCache(eq(clientId))).thenReturn(clientDO);
         // mock 数据（刷新令牌）
         OAuth2RefreshTokenDO refreshTokenDO = randomPojo(OAuth2RefreshTokenDO.class)
                 .setRefreshToken(refreshToken).setClientId(clientId)
