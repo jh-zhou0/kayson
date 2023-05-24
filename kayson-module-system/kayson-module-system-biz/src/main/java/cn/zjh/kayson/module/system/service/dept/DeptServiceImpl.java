@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
@@ -193,18 +192,6 @@ public class DeptServiceImpl implements DeptService{
     }
 
     @Override
-    public List<DeptDO> getDeptChildrenById(Long id) {
-        if (id == null) {
-            return Collections.emptyList();
-        }
-        List<DeptDO> result = new ArrayList<>();
-        List<DeptDO> deptDOList = deptMapper.selectList();
-        // 递归获取
-        getDeptChildrenById(result, id, deptDOList, RECURSIVE_COUNT);
-        return result;
-    }
-
-    @Override
     public List<DeptDO> getDeptListByParentIdFromCache(Long parentId, boolean recursive) {
         if (parentId == null) {
             return Collections.emptyList();
@@ -256,19 +243,5 @@ public class DeptServiceImpl implements DeptService{
             }
         });
     }
-
-    private void getDeptChildrenById(List<DeptDO> result, Long id, List<DeptDO> deptDOList, Integer recursiveCount) {
-        if (recursiveCount == 0) {
-            return;
-        }
-        // 获取id部门的子部门
-        List<DeptDO> children = deptDOList.stream()
-                .filter(dept -> id.equals(dept.getParentId()))
-                .collect(Collectors.toList());
-        if (CollUtil.isEmpty(children)) {
-            return;
-        }
-        result.addAll(children);
-        children.forEach(dept -> getDeptChildrenById(result, dept.getId(), deptDOList, recursiveCount - 1));
-    }
+    
 }

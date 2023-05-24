@@ -165,7 +165,7 @@ public class AdminUserServiceImplTest extends BaseDbUnitTest {
 
         // mock 方法
         List<DeptDO> deptDOList = Collections.singletonList(randomPojo(DeptDO.class, o -> o.setId(2L)));
-        when(deptService.getDeptChildrenById(eq(reqVO.getDeptId()))).thenReturn(deptDOList);
+        when(deptService.getDeptListByParentIdFromCache(eq(reqVO.getDeptId()), eq(true))).thenReturn(deptDOList);
         
         // 调用
         PageResult<AdminUserDO> pageResult = adminUserService.getUserPage(reqVO);

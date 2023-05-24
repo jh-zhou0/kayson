@@ -68,14 +68,6 @@ public interface DeptService {
     Map<Long, DeptDO> getDeptMap(Collection<Long> ids);
 
     /**
-     * 获取指定部门编号的子部门
-     * 
-     * @param id 部门编号
-     * @return 子部门
-     */
-    List<DeptDO> getDeptChildrenById(Long id);
-
-    /**
      * 获得所有子部门，从缓存中
      *
      * @param parentId 部门编号
