@@ -26,6 +26,8 @@ public class SecurityConfiguration {
                         .antMatchers("/swagger-resources/**").anonymous()
                         .antMatchers("/webjars/**").anonymous()
                         .antMatchers("/*/api-docs").anonymous();
+                // Druid 监控
+                registry.antMatchers("/druid/**").anonymous();
             }
         };
     }
