@@ -17,6 +17,11 @@ import java.util.Map;
 public interface DeptService {
 
     /**
+     * 初始化部门的本地缓存
+     */
+    void initLocalCache();
+
+    /**
      * 创建部门
      *
      * @param reqVO 部门信息
@@ -69,6 +74,15 @@ public interface DeptService {
      * @return 子部门
      */
     List<DeptDO> getDeptChildrenById(Long id);
+
+    /**
+     * 获得所有子部门，从缓存中
+     *
+     * @param parentId 部门编号
+     * @param recursive 是否递归获取所有
+     * @return 子部门列表
+     */
+    List<DeptDO> getDeptListByParentIdFromCache(Long parentId, boolean recursive);
 
     /**
      * 校验部门们是否有效。如下情况，视为无效：

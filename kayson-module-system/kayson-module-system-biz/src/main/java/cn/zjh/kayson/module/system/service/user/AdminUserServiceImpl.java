@@ -222,7 +222,7 @@ public class AdminUserServiceImpl implements AdminUserService {
             return Collections.emptySet();
         }
         // 查询子部门
-        List<DeptDO> children = deptService.getDeptChildrenById(deptId);
+        List<DeptDO> children = deptService.getDeptListByParentIdFromCache(deptId, true);
         Set<Long> deptIds = CollectionUtils.convertSet(children, DeptDO::getId);
         deptIds.add(deptId); // 包括自身
         return deptIds;

@@ -9,6 +9,7 @@ import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptUpdateReqVO
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.mysql.dept.DeptMapper;
 import cn.zjh.kayson.module.system.enums.dept.DeptIdEnum;
+import com.google.common.collect.Multimap;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Import;
 
@@ -35,6 +36,27 @@ public class DeptServiceImplTest extends BaseDbUnitTest {
     @Resource // 注入内部的 DeptMapper Bean
     private DeptMapper deptMapper;
 
+    @Test
+    void testInitLocalCache() {
+        // mock 数据
+        DeptDO deptDO1 = randomPojo(DeptDO.class, o -> o.setStatus(randomCommonStatus()));
+        deptMapper.insert(deptDO1);
+        DeptDO deptDO2 = randomPojo(DeptDO.class, o -> o.setStatus(randomCommonStatus()));
+        deptMapper.insert(deptDO2);
+        
+        // 调用
+        deptService.initLocalCache();
+        // 断言 deptCache 缓存
+        Map<Long, DeptDO> deptCache = deptService.getDeptCache();
+        assertEquals(2, deptCache.size());
+        assertPojoEquals(deptDO1, deptCache.get(deptDO1.getId()));
+        assertPojoEquals(deptDO2, deptCache.get(deptDO2.getId()));
+        // 断言 parentDeptCache 缓存
+        Multimap<Long, DeptDO> parentDeptCache = deptService.getParentDeptCache();
+        assertEquals(2, parentDeptCache.size());
+        assertPojoEquals(deptDO1, parentDeptCache.get(deptDO1.getParentId()));
+        assertPojoEquals(deptDO2, parentDeptCache.get(deptDO2.getParentId()));
+    }
 
     @Test
     void testGetDeptList() {
@@ -148,6 +170,8 @@ public class DeptServiceImplTest extends BaseDbUnitTest {
             o.setParentId(parentDept.getId());
         });
         deptMapper.insert(childDept);
+        // 初始化本地缓存
+        deptService.initLocalCache();
         
         // 准备参数
         DeptUpdateReqVO reqVO = randomPojo(DeptUpdateReqVO.class, o -> {

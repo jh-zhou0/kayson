@@ -10,10 +10,15 @@ import cn.zjh.kayson.module.system.convert.dept.DeptConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.mysql.dept.DeptMapper;
 import cn.zjh.kayson.module.system.enums.dept.DeptIdEnum;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,14 +31,51 @@ import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
  * @author zjh - kayson
  */
 @Service
+@Slf4j
 public class DeptServiceImpl implements DeptService{
     
     // 递归次数
     private static final Integer RECURSIVE_COUNT = 99;
+
+    /**
+     * 部门缓存
+     * key：部门编号 {@link DeptDO#getId()}
+     *
+     * 这里声明 volatile 修饰的原因是，每次刷新时，直接修改指向
+     */
+    @Getter
+    private volatile Map<Long, DeptDO> deptCache;
+    /**
+     * 父部门缓存
+     * key：部门编号 {@link DeptDO#getParentId()}
+     * value: 直接子部门列表
+     *
+     * 这里声明 volatile 修饰的原因是，每次刷新时，直接修改指向
+     */
+    @Getter
+    private volatile Multimap<Long, DeptDO> parentDeptCache;
     
     @Resource
     private DeptMapper deptMapper;
-    
+
+    @Override
+    @PostConstruct
+    public void initLocalCache() {
+        // 查询数据
+        List<DeptDO> deptList = deptMapper.selectList();
+        log.info("[initLocalCache][缓存部门，数量为:{}]", deptList.size());
+        
+        // 构建缓存
+        ImmutableMap.Builder<Long, DeptDO> deptCacheBuilder = ImmutableMap.builder();
+        ImmutableMultimap.Builder<Long, DeptDO> parentDeptCacheBuilder = ImmutableMultimap.builder();
+        deptList.forEach(deptDO -> {
+            deptCacheBuilder.put(deptDO.getId(), deptDO);
+            parentDeptCacheBuilder.put(deptDO.getParentId(), deptDO);
+        });
+        deptCache = deptCacheBuilder.build();
+        parentDeptCache = parentDeptCacheBuilder.build();
+    }
+
     @Override
     public Long createDept(DeptCreateReqVO reqVO) {
         // 校验正确性
@@ -127,7 +169,7 @@ public class DeptServiceImpl implements DeptService{
             throw exception(DEPT_NOT_ENABLE);
         }
         // 父部门不能是原来的子部门
-        List<DeptDO> children = getDeptChildrenById(id);
+        List<DeptDO> children = getDeptListByParentIdFromCache(id, true);
         if (CollUtil.isEmpty(children)) {
             return;
         }
@@ -160,6 +202,41 @@ public class DeptServiceImpl implements DeptService{
         // 递归获取
         getDeptChildrenById(result, id, deptDOList, RECURSIVE_COUNT);
         return result;
+    }
+
+    @Override
+    public List<DeptDO> getDeptListByParentIdFromCache(Long parentId, boolean recursive) {
+        if (parentId == null) {
+            return Collections.emptyList();
+        }
+        List<DeptDO> result = new ArrayList<>();
+        getDeptListByParentIdFromCache(result, parentId, parentDeptCache, 
+                recursive ? RECURSIVE_COUNT : 1); // 如果递归获取，则无限；否则，只递归 1 次
+        return result;
+    }
+
+    /**
+     * 递归获取所有的子部门，添加到 result 结果
+     * 
+     * @param result 结果
+     * @param parentId 部门编号
+     * @param parentDeptCache 父部门 Map，使用缓存，避免变化
+     * @param recursiveCount 递归次数
+     */
+    private void getDeptListByParentIdFromCache(List<DeptDO> result, Long parentId, Multimap<Long, DeptDO> parentDeptCache, int recursiveCount) {
+        // 终止条件
+        if (recursiveCount == 0) {
+            return;
+        }
+        // 获得子部门
+        Collection<DeptDO> depts = parentDeptCache.get(parentId);
+        if (CollUtil.isEmpty(depts)) {
+            return;
+        }
+        result.addAll(depts);
+        // 继续递归
+        depts.forEach(dept -> getDeptListByParentIdFromCache(result, dept.getId(),
+                parentDeptCache, recursiveCount - 1));
     }
 
     @Override
