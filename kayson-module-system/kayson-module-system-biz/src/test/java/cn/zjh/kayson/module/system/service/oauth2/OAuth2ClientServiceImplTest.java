@@ -9,7 +9,9 @@ import cn.zjh.kayson.module.system.controller.admin.oauth2.vo.OAuth2ClientPageRe
 import cn.zjh.kayson.module.system.controller.admin.oauth2.vo.OAuth2ClientUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
 import cn.zjh.kayson.module.system.dal.mysql.oauth2.OAuth2ClientMapper;
+import cn.zjh.kayson.module.system.mq.producer.oauth2.OAuth2ClientProducer;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 
 import javax.annotation.Resource;
@@ -22,6 +24,7 @@ import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertServiceEx
 import static cn.zjh.kayson.framework.test.core.util.RandomUtils.*;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author zjh - kayson
@@ -34,6 +37,9 @@ public class OAuth2ClientServiceImplTest extends BaseDbUnitTest {
 
     @Resource
     private OAuth2ClientMapper oauth2ClientMapper;
+    
+    @MockBean
+    private OAuth2ClientProducer oauth2ClientProducer;
 
     @Test
     void testInitLocalCache() {
@@ -64,6 +70,7 @@ public class OAuth2ClientServiceImplTest extends BaseDbUnitTest {
         // 校验记录的属性是否正确
         OAuth2ClientDO clientDO = oauth2ClientMapper.selectById(clientId);
         assertPojoEquals(reqVO, clientDO);
+        verify(oauth2ClientProducer).sendOAuth2ClientRefreshMessage();
     }
 
     @Test
@@ -80,6 +87,7 @@ public class OAuth2ClientServiceImplTest extends BaseDbUnitTest {
         // 校验是否更新正确
         OAuth2ClientDO clientDO = oauth2ClientMapper.selectById(reqVO.getId());
         assertPojoEquals(reqVO, clientDO);
+        verify(oauth2ClientProducer).sendOAuth2ClientRefreshMessage();
     }
 
     @Test
@@ -103,6 +111,7 @@ public class OAuth2ClientServiceImplTest extends BaseDbUnitTest {
         oauth2ClientService.deleteOAuth2Client(id);
         // 校验数据不存在了
         assertNull(oauth2ClientMapper.selectById(id));
+        verify(oauth2ClientProducer).sendOAuth2ClientRefreshMessage();
     }
 
     @Test

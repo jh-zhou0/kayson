@@ -9,8 +9,10 @@ import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptUpdateReqVO
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.mysql.dept.DeptMapper;
 import cn.zjh.kayson.module.system.enums.dept.DeptIdEnum;
+import cn.zjh.kayson.module.system.mq.producer.dept.DeptProducer;
 import com.google.common.collect.Multimap;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 
 import javax.annotation.Resource;
@@ -23,6 +25,7 @@ import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertServiceEx
 import static cn.zjh.kayson.framework.test.core.util.RandomUtils.*;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author zjh - kayson
@@ -35,6 +38,9 @@ public class DeptServiceImplTest extends BaseDbUnitTest {
     
     @Resource // 注入内部的 DeptMapper Bean
     private DeptMapper deptMapper;
+    
+    @MockBean
+    private DeptProducer deptProducer;
 
     @Test
     void testInitLocalCache() {
@@ -91,6 +97,7 @@ public class DeptServiceImplTest extends BaseDbUnitTest {
         // 校验记录的属性是否正确
         DeptDO dept = deptMapper.selectById(deptId);
         assertPojoEquals(reqVO, dept);
+        verify(deptProducer).sendDeptRefreshMessage();
     }
 
     @Test
@@ -107,6 +114,7 @@ public class DeptServiceImplTest extends BaseDbUnitTest {
         // 校验是否更新正确
         DeptDO dept = deptMapper.selectById(reqVO.getId());
         assertPojoEquals(reqVO, dept);
+        verify(deptProducer).sendDeptRefreshMessage();
     }
 
     @Test
@@ -121,6 +129,7 @@ public class DeptServiceImplTest extends BaseDbUnitTest {
         deptService.deleteDept(id);
         // 校验数据不存在了
         assertNull(deptMapper.selectById(id));
+        verify(deptProducer).sendDeptRefreshMessage();
     }
 
     @Test

@@ -14,11 +14,14 @@ import cn.zjh.kayson.module.system.dal.mysql.permission.RoleMapper;
 import cn.zjh.kayson.module.system.enums.permission.DataScopeEnum;
 import cn.zjh.kayson.module.system.enums.permission.RoleCodeEnum;
 import cn.zjh.kayson.module.system.enums.permission.RoleTypeEnum;
+import cn.zjh.kayson.module.system.mq.producer.permission.RoleProducer;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -54,6 +57,9 @@ public class RoleServiceImpl implements RoleService {
     
     @Resource
     private PermissionService permissionService;
+    
+    @Resource
+    private RoleProducer roleProducer;
 
     @Override
     @PostConstruct
@@ -76,6 +82,8 @@ public class RoleServiceImpl implements RoleService {
         role.setStatus(CommonStatusEnum.ENABLE.getStatus());
         role.setDataScope(DataScopeEnum.ALL.getScope()); // 默认可查看所有数据。原因是，可能一些项目不需要数据权限
         roleMapper.insert(role);
+        // 发送刷新消息
+        roleProducer.sendRoleRefreshMessage();
         return role.getId();
     }
 
@@ -88,6 +96,8 @@ public class RoleServiceImpl implements RoleService {
         // 更新角色
         RoleDO updateObj = RoleConvert.INSTANCE.convert(reqVO);
         roleMapper.updateById(updateObj);
+        // 发送刷新消息
+        roleProducer.sendRoleRefreshMessage();
     }
 
     @Override
@@ -97,6 +107,8 @@ public class RoleServiceImpl implements RoleService {
         // 更新状态
         RoleDO updateObj = new RoleDO().setId(id).setStatus(status);
         roleMapper.updateById(updateObj);
+        // 发送刷新消息
+        roleProducer.sendRoleRefreshMessage();
     }
 
     @Override
@@ -108,6 +120,15 @@ public class RoleServiceImpl implements RoleService {
         roleMapper.deleteById(id);
         // 删除角色相关数据
         permissionService.processRoleDeleted(id);
+        // 发送刷新消息. 注意，需要事务提交后，在进行发送刷新消息。不然 db 还未提交，结果缓存先刷新了
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            
+            @Override
+            public void afterCommit() {
+                roleProducer.sendRoleRefreshMessage();
+            }
+            
+        });
     }
 
     @Override

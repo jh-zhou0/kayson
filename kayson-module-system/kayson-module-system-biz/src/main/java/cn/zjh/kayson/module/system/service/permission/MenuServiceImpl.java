@@ -10,6 +10,7 @@ import cn.zjh.kayson.module.system.convert.permission.MenuConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.MenuMapper;
 import cn.zjh.kayson.module.system.enums.permission.MenuTypeEnum;
+import cn.zjh.kayson.module.system.mq.producer.permission.MenuProducer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -19,6 +20,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -62,6 +65,9 @@ public class MenuServiceImpl implements MenuService {
     
     @Resource
     private PermissionService permissionService;
+    
+    @Resource
+    private MenuProducer menuProducer;
 
     @Override
     @PostConstruct
@@ -91,6 +97,8 @@ public class MenuServiceImpl implements MenuService {
         MenuDO menu = MenuConvert.INSTANCE.convert(reqVO);
         initMenuProperty(menu);
         menuMapper.insert(menu);
+        // 发送刷新消息
+        menuProducer.sendMenuRefreshMessage();
         return menu.getId();
     }
 
@@ -102,6 +110,8 @@ public class MenuServiceImpl implements MenuService {
         MenuDO updateObj = MenuConvert.INSTANCE.convert(reqVO);
         initMenuProperty(updateObj);
         menuMapper.updateById(updateObj);
+        // 发送刷新消息
+        menuProducer.sendMenuRefreshMessage();
     }
 
     @Override
@@ -117,6 +127,15 @@ public class MenuServiceImpl implements MenuService {
         menuMapper.deleteById(id);
         // 删除授予给角色的权限
         permissionService.processMenuDeleted(id);
+        // 发送刷新消息. 注意，需要事务提交后，在进行发送刷新消息。不然 db 还未提交，结果缓存先刷新了
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            
+            @Override
+            public void afterCommit() {
+                menuProducer.sendMenuRefreshMessage();
+            }
+            
+        });
     }
 
     @Override

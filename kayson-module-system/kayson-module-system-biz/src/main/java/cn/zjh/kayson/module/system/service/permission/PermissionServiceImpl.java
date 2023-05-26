@@ -11,6 +11,7 @@ import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleMenuDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.UserRoleDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.RoleMenuMapper;
 import cn.zjh.kayson.module.system.dal.mysql.permission.UserRoleMapper;
+import cn.zjh.kayson.module.system.mq.producer.permission.PermissionProducer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
@@ -20,6 +21,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -77,6 +80,9 @@ public class PermissionServiceImpl implements PermissionService {
     private RoleService roleService;
     @Resource
     private MenuService menuService;
+    
+    @Resource
+    private PermissionProducer permissionProducer;
 
     @Override
     @PostConstruct
@@ -132,6 +138,15 @@ public class PermissionServiceImpl implements PermissionService {
         if (CollUtil.isNotEmpty(deleteRoleIds)) {
             userRoleMapper.deleteListByUserIdAndRoleIdIds(userId, deleteRoleIds);
         }
+        // 发送刷新消息. 注意，需要事务提交后，在进行发送刷新消息。不然 db 还未提交，结果缓存先刷新了
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            
+            @Override
+            public void afterCommit() {
+                permissionProducer.sendUserRoleRefreshMessage();
+            }
+            
+        });
     }
 
     @Override
@@ -174,6 +189,15 @@ public class PermissionServiceImpl implements PermissionService {
         if (CollUtil.isNotEmpty(deleteMenuIds)) {
             roleMenuMapper.deleteListByRoleIdAndMenuIds(roleId, deleteMenuIds);
         }
+        // 发送刷新消息. 注意，需要事务提交后，在进行发送刷新消息。不然 db 还未提交，结果缓存先刷新了
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+            @Override
+            public void afterCommit() {
+                permissionProducer.sendRoleMenuRefreshMessage();
+            }
+
+        });
     }
 
     @Override
@@ -228,12 +252,30 @@ public class PermissionServiceImpl implements PermissionService {
     @Transactional(rollbackFor = Exception.class)
     public void processUserDeleted(Long userId) {
         userRoleMapper.deleteListByUserId(userId);
+        // 发送刷新消息. 注意，需要事务提交后，在进行发送刷新消息。不然 db 还未提交，结果缓存先刷新了
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+            @Override
+            public void afterCommit() {
+                permissionProducer.sendUserRoleRefreshMessage();
+            }
+
+        });
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void processMenuDeleted(Long menuId) {
         roleMenuMapper.deleteListByMenuId(menuId);
+        // 发送刷新消息. 注意，需要事务提交后，在进行发送刷新消息。不然 db 还未提交，结果缓存先刷新了
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+            @Override
+            public void afterCommit() {
+                permissionProducer.sendRoleMenuRefreshMessage();
+            }
+
+        });
     }
 
     @Override
@@ -241,6 +283,16 @@ public class PermissionServiceImpl implements PermissionService {
     public void processRoleDeleted(Long roleId) {
         userRoleMapper.deleteListByRoleId(roleId);
         roleMenuMapper.deleteListByRoleId(roleId);
+        // 发送刷新消息. 注意，需要事务提交后，在进行发送刷新消息。不然 db 还未提交，结果缓存先刷新了
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+            @Override
+            public void afterCommit() {
+                permissionProducer.sendUserRoleRefreshMessage();
+                permissionProducer.sendRoleMenuRefreshMessage();
+            }
+
+        });
     }
 
     @Override

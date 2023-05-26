@@ -13,6 +13,7 @@
         <module>kayson-spring-boot-starter-captcha</module>
         <module>kayson-spring-boot-starter-test</module>
         <module>kayson-spring-boot-starter-job</module>
+        <module>kayson-spring-boot-starter-mq</module>
     </modules>
     <parent>
         <artifactId>kayson</artifactId>

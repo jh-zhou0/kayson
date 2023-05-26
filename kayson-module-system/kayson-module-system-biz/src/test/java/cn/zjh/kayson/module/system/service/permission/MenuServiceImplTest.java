@@ -9,6 +9,7 @@ import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuUpdat
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.MenuMapper;
 import cn.zjh.kayson.module.system.enums.permission.MenuTypeEnum;
+import cn.zjh.kayson.module.system.mq.producer.permission.MenuProducer;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ public class MenuServiceImplTest extends BaseDbUnitTest {
     
     @MockBean
     private PermissionService permissionService;
+    
+    @MockBean
+    private MenuProducer menuProducer;
 
     @Test
     void testInitLocalCache() {
@@ -81,6 +85,8 @@ public class MenuServiceImplTest extends BaseDbUnitTest {
         // 校验记录的属性是否正确
         MenuDO menuDO = menuMapper.selectById(menuId);
         assertPojoEquals(reqVO, menuDO);
+        // 校验调用
+        verify(menuProducer).sendMenuRefreshMessage();
     }
     
     @Test
@@ -109,6 +115,8 @@ public class MenuServiceImplTest extends BaseDbUnitTest {
         // 校验记录的属性是否正确
         MenuDO menuDO = menuMapper.selectById(id);
         assertPojoEquals(reqVO, menuDO);
+        // 校验调用
+        verify(menuProducer).sendMenuRefreshMessage();
     }
 
     @Test
@@ -132,7 +140,9 @@ public class MenuServiceImplTest extends BaseDbUnitTest {
         // 断言
         MenuDO dbMenuDO = menuMapper.selectById(id);
         assertNull(dbMenuDO);
+        // 校验调用
         verify(permissionService).processMenuDeleted(id);
+        verify(menuProducer).sendMenuRefreshMessage();
     }
 
     @Test

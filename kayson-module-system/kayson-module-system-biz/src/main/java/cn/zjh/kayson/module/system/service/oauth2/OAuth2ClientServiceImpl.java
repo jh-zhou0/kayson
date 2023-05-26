@@ -12,6 +12,7 @@ import cn.zjh.kayson.module.system.controller.admin.oauth2.vo.OAuth2ClientUpdate
 import cn.zjh.kayson.module.system.convert.oauth2.OAuth2ClientConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
 import cn.zjh.kayson.module.system.dal.mysql.oauth2.OAuth2ClientMapper;
+import cn.zjh.kayson.module.system.mq.producer.oauth2.OAuth2ClientProducer;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,6 +49,9 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
     
     @Resource
     private OAuth2ClientMapper oAuth2ClientMapper;
+    
+    @Resource
+    private OAuth2ClientProducer oauth2ClientProducer;
 
     @Override
     @PostConstruct
@@ -67,6 +71,8 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
         // 插入客户端
         OAuth2ClientDO client = OAuth2ClientConvert.INSTANCE.convert(createReqVO);
         oAuth2ClientMapper.insert(client);
+        // 发送刷新消息
+        oauth2ClientProducer.sendOAuth2ClientRefreshMessage();
         return client.getId();
     }
 
@@ -79,6 +85,8 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
         // 更新客户端
         OAuth2ClientDO updateObj = OAuth2ClientConvert.INSTANCE.convert(updateReqVO);
         oAuth2ClientMapper.updateById(updateObj);
+        // 发送刷新消息
+        oauth2ClientProducer.sendOAuth2ClientRefreshMessage();
     }
 
     @Override
@@ -87,6 +95,8 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
         validateOAuth2ClientExists(id);
         // 删除客户端
         oAuth2ClientMapper.deleteById(id);
+        // 发送刷新消息
+        oauth2ClientProducer.sendOAuth2ClientRefreshMessage();
     }
 
     @Override

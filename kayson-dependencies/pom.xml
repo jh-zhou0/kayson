@@ -180,6 +180,13 @@
                 <version>${revision}</version>
             </dependency>
 
+            <!-- 消息队列相关 -->
+            <dependency>
+                <groupId>cn.zjh.boot</groupId>
+                <artifactId>kayson-spring-boot-starter-mq</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
             <!-- Test 测试相关 -->
             <dependency>
                 <groupId>cn.zjh.boot</groupId>

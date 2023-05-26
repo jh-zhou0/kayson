@@ -10,6 +10,7 @@ import cn.zjh.kayson.module.system.convert.dept.DeptConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.mysql.dept.DeptMapper;
 import cn.zjh.kayson.module.system.enums.dept.DeptIdEnum;
+import cn.zjh.kayson.module.system.mq.producer.dept.DeptProducer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
@@ -56,6 +57,9 @@ public class DeptServiceImpl implements DeptService{
     
     @Resource
     private DeptMapper deptMapper;
+    
+    @Resource
+    private DeptProducer deptProducer;
 
     @Override
     @PostConstruct
@@ -85,6 +89,8 @@ public class DeptServiceImpl implements DeptService{
         // 插入部门
         DeptDO dept = DeptConvert.INSTANCE.convert(reqVO);
         deptMapper.insert(dept);
+        // 发送刷新消息
+        deptProducer.sendDeptRefreshMessage();
         return dept.getId();
     }
 
@@ -98,6 +104,8 @@ public class DeptServiceImpl implements DeptService{
         // 更新部门
         DeptDO updateObj = DeptConvert.INSTANCE.convert(reqVO);
         deptMapper.updateById(updateObj);
+        // 发送刷新消息
+        deptProducer.sendDeptRefreshMessage();
     }
 
     @Override
@@ -110,6 +118,8 @@ public class DeptServiceImpl implements DeptService{
         }
         // 删除部门
         deptMapper.deleteById(id);
+        // 发送刷新消息
+        deptProducer.sendDeptRefreshMessage();
     }
 
     @Override
