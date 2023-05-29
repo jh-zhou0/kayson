@@ -1,6 +1,7 @@
 package cn.zjh.kayson.module.system.convert.dict;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.module.system.api.dict.vo.DictDataRespDTO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataRespVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataSimpleRespVO;
@@ -28,4 +29,6 @@ public interface DictDataConvert {
     PageResult<DictDataRespVO> convertPage(PageResult<DictDataDO> page);
     
     DictDataRespVO convert(DictDataDO bean);
+    
+    DictDataRespDTO convert01(DictDataDO bean);
 }
