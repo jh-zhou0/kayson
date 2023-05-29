@@ -2,6 +2,7 @@ package cn.zjh.kayson.module.system.service.dict;
 
 import cn.hutool.core.util.StrUtil;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.framework.common.util.date.LocalDateTimeUtils;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypePageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeUpdateReqVO;
@@ -12,7 +13,6 @@ import com.google.common.annotations.VisibleForTesting;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,7 +38,8 @@ public class DictTypeServiceImpl implements DictTypeService {
         // 校验正确性
         validateDictTypeForCreateOrUpdate(null, reqVO.getName(), reqVO.getType());
         // 插入字典类型
-        DictTypeDO dictType = DictTypeConvert.INSTANCE.convert(reqVO);
+        DictTypeDO dictType = DictTypeConvert.INSTANCE.convert(reqVO)
+                .setDeletedTime(LocalDateTimeUtils.EMPTY); // 避免 null 值;
         dictTypeMapper.insert(dictType);
         return dictType.getId();
     }

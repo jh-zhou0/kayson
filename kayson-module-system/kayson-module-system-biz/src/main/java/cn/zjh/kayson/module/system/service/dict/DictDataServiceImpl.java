@@ -131,7 +131,8 @@ public class DictDataServiceImpl implements DictDataService {
         }
     }
 
-    private void validateDictDataValueUnique(Long id, String dictType, String value) {
+    @VisibleForTesting
+    void validateDictDataValueUnique(Long id, String dictType, String value) {
         DictDataDO dictData = dictDataMapper.selectByDictTypeAndValue(dictType, value);
         if (dictData == null) {
             return;
