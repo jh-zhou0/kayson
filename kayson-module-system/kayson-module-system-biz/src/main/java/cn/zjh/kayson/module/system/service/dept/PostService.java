@@ -1,12 +1,19 @@
 package cn.zjh.kayson.module.system.service.dept;
 
+import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.PostDO;
+import org.springframework.lang.Nullable;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
+
+import static cn.zjh.kayson.framework.common.util.collection.SetUtils.asSet;
 
 /**
  * 岗位 Service 接口
@@ -61,4 +68,32 @@ public interface PostService {
      * @param ids 岗位编号数组
      */
     void validatePostList(Set<Long> ids);
+
+    /**
+     * 获得岗位列表
+     *
+     * @param ids 岗位编号数组。如果为空，不进行筛选
+     * @return 部门列表
+     */
+    default List<PostDO> getPostList(@Nullable Collection<Long> ids) {
+        return getPostList(ids, asSet(CommonStatusEnum.ENABLE.getStatus(), CommonStatusEnum.DISABLE.getStatus()));
+    }
+
+    /**
+     * 获得符合条件的岗位列表
+     *
+     * @param ids 岗位编号数组。如果为空，不进行筛选
+     * @param statuses 状态数组。如果为空，不进行筛选
+     * @return 部门列表
+     */
+    List<PostDO> getPostList(@Nullable Collection<Long> ids, @Nullable Collection<Integer> statuses);
+
+    /**
+     * 获得岗位列表
+     *
+     * @param reqVO 查询条件
+     * @return 部门列表
+     */
+    List<PostDO> getPostList(PostExportReqVO reqVO);
+    
 }

@@ -1,12 +1,12 @@
 package cn.zjh.kayson.module.system.convert.dept;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostRespVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.*;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.PostDO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author zjh - kayson
@@ -23,4 +23,9 @@ public interface PostConvert {
     PostRespVO convert(PostDO bean);
 
     PageResult<PostRespVO> convertPage(PageResult<PostDO> page);
+
+    List<PostSimpleRespVO> convertList(List<PostDO> list);
+    
+    List<PostExcelVO> convertList01(List<PostDO> list);
+
 }

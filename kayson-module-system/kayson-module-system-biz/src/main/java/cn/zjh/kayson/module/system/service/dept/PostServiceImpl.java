@@ -5,6 +5,7 @@ import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostUpdateReqVO;
 import cn.zjh.kayson.module.system.convert.dept.PostConvert;
@@ -13,6 +14,7 @@ import cn.zjh.kayson.module.system.dal.mysql.dept.PostMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,6 +87,16 @@ public class PostServiceImpl implements PostService{
                 throw exception(POST_NOT_ENABLE);
             }
         });
+    }
+
+    @Override
+    public List<PostDO> getPostList(Collection<Long> ids, Collection<Integer> statuses) {
+        return postMapper.selectList(ids, statuses);
+    }
+
+    @Override
+    public List<PostDO> getPostList(PostExportReqVO reqVO) {
+        return postMapper.selectList(reqVO);
     }
 
     private void validatePostForCreateOrUpdate(Long id, String name, String code) {

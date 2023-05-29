@@ -1,11 +1,11 @@
 package cn.zjh.kayson.module.system.controller.admin.dept;
 
+import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostPageReqVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostRespVO;
-import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostUpdateReqVO;
+import cn.zjh.kayson.framework.excel.core.util.ExcelUtils;
+import cn.zjh.kayson.framework.operatelog.core.annotations.OperateLog;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.*;
 import cn.zjh.kayson.module.system.convert.dept.PostConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.PostDO;
 import cn.zjh.kayson.module.system.service.dept.PostService;
@@ -17,9 +17,15 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import static cn.zjh.kayson.framework.common.pojo.CommonResult.success;
+import static cn.zjh.kayson.framework.operatelog.core.enums.OperateTypeEnum.EXPORT;
 
 /**
  * @author zjh - kayson
@@ -73,4 +79,26 @@ public class PostController {
         PageResult<PostDO> pageResult = postService.getPostPage(reqVO);
         return success(PostConvert.INSTANCE.convertPage(pageResult));
     }
+
+    @GetMapping("/list-all-simple")
+    @Operation(summary = "获取岗位精简信息列表", description = "只包含被开启的岗位，主要用于前端的下拉选项")
+    public CommonResult<List<PostSimpleRespVO>> getSimplePostList() {
+        // 获得岗位列表，只要开启状态的
+        List<PostDO> list = postService.getPostList(null, Collections.singleton(CommonStatusEnum.ENABLE.getStatus()));
+        // 排序后，返回给前端
+        list.sort(Comparator.comparing(PostDO::getSort));
+        return success(PostConvert.INSTANCE.convertList(list));
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "岗位管理")
+    @PreAuthorize("@ss.hasPermission('system:post:export')")
+    @OperateLog(type = EXPORT)
+    public void export(HttpServletResponse response, @Validated PostExportReqVO reqVO) throws IOException {
+        List<PostDO> posts = postService.getPostList(reqVO);
+        List<PostExcelVO> data = PostConvert.INSTANCE.convertList01(posts);
+        // 输出
+        ExcelUtils.write(response, "岗位数据.xls", "岗位列表", PostExcelVO.class, data);
+    }
+    
 }
