@@ -15,6 +15,7 @@
         <module>kayson-spring-boot-starter-job</module>
         <module>kayson-spring-boot-starter-mq</module>
         <module>kayson-spring-boot-starter-biz-dict</module>
+        <module>kayson-spring-boot-starter-excel</module>
     </modules>
     <parent>
         <artifactId>kayson</artifactId>
