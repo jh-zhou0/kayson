@@ -2,8 +2,11 @@ package cn.zjh.kayson.module.system.service.logger;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.module.system.api.logger.dto.LoginLogCreateReqDTO;
+import cn.zjh.kayson.module.system.controller.admin.logger.vo.loginlog.LoginLogExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.logger.vo.loginlog.LoginLogPageReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.logger.LoginLogDO;
+
+import java.util.List;
 
 /**
  * 登录日志 Service 接口
@@ -26,4 +29,13 @@ public interface LoginLogService {
      * @param reqDTO 日志信息
      */
     void createLoginLog(LoginLogCreateReqDTO reqDTO);
+
+    /**
+     * 获得登录日志列表
+     *
+     * @param reqVO 列表条件
+     * @return 登录日志列表
+     */
+    List<LoginLogDO> getLoginLogList(LoginLogExportReqVO reqVO);
+    
 }

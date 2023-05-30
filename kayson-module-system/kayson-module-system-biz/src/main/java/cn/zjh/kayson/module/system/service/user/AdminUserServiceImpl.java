@@ -204,6 +204,19 @@ public class AdminUserServiceImpl implements AdminUserService {
         return null;
     }
 
+    @Override
+    public List<AdminUserDO> getUserListByNickname(String nickname) {
+        return adminUserMapper.selectListByNickname(nickname);
+    }
+
+    @Override
+    public List<AdminUserDO> getUserList(Collection<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return Collections.emptyList();
+        }
+        return adminUserMapper.selectBatchIds(ids);
+    }
+
     @VisibleForTesting
     void validateOldPassword(Long id, String oldPassword) {
         AdminUserDO user = adminUserMapper.selectById(id);

@@ -1,6 +1,7 @@
 package cn.zjh.kayson.module.system.service.user;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserCreateReqVO;
@@ -10,7 +11,9 @@ import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 
 import javax.validation.Valid;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 后台用户 Service 接口
@@ -130,5 +133,31 @@ public interface AdminUserService {
      * @param avatarFile 头像文件
      */
     String updateUserAvatar(Long id, InputStream avatarFile) throws Exception;
+
+    /**
+     * 获得用户列表，基于昵称模糊匹配
+     *
+     * @param nickname 昵称
+     * @return 用户列表
+     */
+    List<AdminUserDO> getUserListByNickname(String nickname);
+
+    /**
+     * 获得用户 Map
+     *
+     * @param ids 用户编号数组
+     * @return 用户 Map
+     */
+    default Map<Long, AdminUserDO> getUserMap(Collection<Long> ids) {
+        return CollectionUtils.convertMap(getUserList(ids), AdminUserDO::getId);
+    }
+
+    /**
+     * 获得用户列表
+     *
+     * @param ids 用户编号数组
+     * @return 用户列表
+     */
+    List<AdminUserDO> getUserList(Collection<Long> ids);
     
 }

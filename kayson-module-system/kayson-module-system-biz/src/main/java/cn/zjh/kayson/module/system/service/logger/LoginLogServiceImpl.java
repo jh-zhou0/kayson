@@ -2,6 +2,7 @@ package cn.zjh.kayson.module.system.service.logger;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.module.system.api.logger.dto.LoginLogCreateReqDTO;
+import cn.zjh.kayson.module.system.controller.admin.logger.vo.loginlog.LoginLogExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.logger.vo.loginlog.LoginLogPageReqVO;
 import cn.zjh.kayson.module.system.convert.logger.LoginLogConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.logger.LoginLogDO;
@@ -9,6 +10,7 @@ import cn.zjh.kayson.module.system.dal.mysql.logger.LoginLogMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 登录日志 Service 实现
@@ -30,5 +32,10 @@ public class LoginLogServiceImpl implements LoginLogService {
     public void createLoginLog(LoginLogCreateReqDTO reqDTO) {
         LoginLogDO loginLog = LoginLogConvert.INSTANCE.convert(reqDTO);
         loginLogMapper.insert(loginLog);
+    }
+
+    @Override
+    public List<LoginLogDO> getLoginLogList(LoginLogExportReqVO reqVO) {
+        return loginLogMapper.selectList(reqVO);
     }
 }
