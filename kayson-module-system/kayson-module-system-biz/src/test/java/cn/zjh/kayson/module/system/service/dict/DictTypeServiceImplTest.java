@@ -4,6 +4,7 @@ import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypePageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dict.DictTypeDO;
@@ -179,6 +180,38 @@ public class DictTypeServiceImplTest extends BaseDbUnitTest {
         // 断言
         assertNotNull(dictType);
         assertPojoEquals(dbDictType, dictType);
+    }
+
+    @Test
+    public void testGetDictTypeList_export() {
+        // mock 数据
+        DictTypeDO dbDictType = randomPojo(DictTypeDO.class, o -> { // 等会查询到
+            o.setName("kayson");
+            o.setType("sys_kayson");
+            o.setStatus(CommonStatusEnum.ENABLE.getStatus());
+            o.setCreateTime(buildTime(2023, 5, 30));
+        });
+        dictTypeMapper.insert(dbDictType);
+        // 测试 name 不匹配
+        dictTypeMapper.insert(cloneIgnoreId(dbDictType, o -> o.setName("name")));
+        // 测试 type 不匹配
+        dictTypeMapper.insert(cloneIgnoreId(dbDictType, o -> o.setType("type")));
+        // 测试 status 不匹配
+        dictTypeMapper.insert(cloneIgnoreId(dbDictType, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus())));
+        // 测试 createTime 不匹配
+        dictTypeMapper.insert(cloneIgnoreId(dbDictType, o -> o.setCreateTime(buildTime(2023, 1, 1))));
+        // 准备参数
+        DictTypeExportReqVO reqVO = new DictTypeExportReqVO();
+        reqVO.setName("kay");
+        reqVO.setType("sys");
+        reqVO.setStatus(CommonStatusEnum.ENABLE.getStatus());
+        reqVO.setCreateTime(buildBetweenTime(2023, 5, 29, 2023, 5, 31));
+
+        // 调用
+        List<DictTypeDO> list = dictTypeService.getDictTypeList(reqVO);
+        // 断言
+        assertEquals(1, list.size());
+        assertPojoEquals(dbDictType, list.get(0));
     }
 
     @Test

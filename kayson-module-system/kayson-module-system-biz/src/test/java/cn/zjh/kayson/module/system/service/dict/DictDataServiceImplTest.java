@@ -4,6 +4,7 @@ import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dict.DictDataDO;
@@ -207,6 +208,34 @@ public class DictDataServiceImplTest extends BaseDbUnitTest {
         DictDataDO dbDictData = dictDataService.parseDictData(dictType, label);
         // 断言
         assertEquals(dictDataDO, dbDictData);
+    }
+
+    @Test
+    public void testGetDictDataList_export() {
+        // mock 数据
+        DictDataDO dbDictData = randomPojo(DictDataDO.class, o -> { // 等会查询到
+            o.setLabel("kayson");
+            o.setDictType("sys_kayson");
+            o.setStatus(CommonStatusEnum.ENABLE.getStatus());
+        });
+        dictDataMapper.insert(dbDictData);
+        // 测试 label 不匹配
+        dictDataMapper.insert(cloneIgnoreId(dbDictData, o -> o.setLabel("label")));
+        // 测试 dictType 不匹配
+        dictDataMapper.insert(cloneIgnoreId(dbDictData, o -> o.setDictType("type")));
+        // 测试 status 不匹配
+        dictDataMapper.insert(cloneIgnoreId(dbDictData, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus())));
+        // 准备参数
+        DictDataExportReqVO reqVO = new DictDataExportReqVO();
+        reqVO.setLabel("kay");
+        reqVO.setDictType("sys_kayson");
+        reqVO.setStatus(CommonStatusEnum.ENABLE.getStatus());
+
+        // 调用
+        List<DictDataDO> list = dictDataService.getDictDataList(reqVO);
+        // 断言
+        assertEquals(1, list.size());
+        assertPojoEquals(dbDictData, list.get(0));
     }
 
     @Test

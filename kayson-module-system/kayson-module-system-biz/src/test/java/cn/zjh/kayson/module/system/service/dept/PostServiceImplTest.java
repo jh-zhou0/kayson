@@ -2,9 +2,9 @@ package cn.zjh.kayson.module.system.service.dept;
 
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
-import cn.zjh.kayson.framework.common.util.object.ObjectUtils;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.post.PostUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.PostDO;
@@ -13,7 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Import;
 
 import javax.annotation.Resource;
+import java.util.List;
 
+import static cn.zjh.kayson.framework.common.util.object.ObjectUtils.cloneIgnoreId;
 import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertPojoEquals;
 import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertServiceException;
 import static cn.zjh.kayson.framework.test.core.util.RandomUtils.*;
@@ -117,8 +119,8 @@ public class PostServiceImplTest extends BaseDbUnitTest {
         // mock 数据
         PostDO postDO = randomPojo(PostDO.class, o -> o.setName("码仔").setStatus(CommonStatusEnum.ENABLE.getStatus()));
         postMapper.insert(postDO);
-        postMapper.insert(ObjectUtils.cloneIgnoreId(postDO, o -> o.setName("程序员")));
-        postMapper.insert(ObjectUtils.cloneIgnoreId(postDO, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus())));
+        postMapper.insert(cloneIgnoreId(postDO, o -> o.setName("程序员")));
+        postMapper.insert(cloneIgnoreId(postDO, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus())));
         // 准备参数
         PostPageReqVO reqVO = new PostPageReqVO().setName("码").setStatus(CommonStatusEnum.ENABLE.getStatus());
 
@@ -144,4 +146,29 @@ public class PostServiceImplTest extends BaseDbUnitTest {
         assertNotNull(post);
         assertPojoEquals(postDO, post);
     }
+
+    @Test
+    void testGetPostList_export() {
+        // mock 数据
+        PostDO postDO = randomPojo(PostDO.class, o -> {
+            o.setName("码仔");
+            o.setStatus(CommonStatusEnum.ENABLE.getStatus());
+        });
+        postMapper.insert(postDO);
+        // 测试 name 不匹配
+        postMapper.insert(cloneIgnoreId(postDO, o -> o.setName("程序员")));
+        // 测试 status 不匹配
+        postMapper.insert(cloneIgnoreId(postDO, o -> o.setStatus(CommonStatusEnum.DISABLE.getStatus())));
+        // 准备参数
+        PostExportReqVO reqVO = new PostExportReqVO();
+        reqVO.setName("码");
+        reqVO.setStatus(CommonStatusEnum.ENABLE.getStatus());
+
+        // 调用
+        List<PostDO> list = postService.getPostList(reqVO);
+        // 断言
+        assertEquals(1, list.size());
+        assertPojoEquals(postDO, list.get(0));
+    }
+    
 }

@@ -4,12 +4,14 @@ import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RolePageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.RoleMapper;
 import cn.zjh.kayson.module.system.enums.permission.DataScopeEnum;
 import cn.zjh.kayson.module.system.enums.permission.RoleTypeEnum;
+import cn.zjh.kayson.module.system.mq.producer.permission.RoleProducer;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -46,6 +48,9 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
     
     @MockBean
     private PermissionService permissionService;
+    
+    @MockBean
+    private RoleProducer roleProducer;
 
     @Test
     void testInitLocalCache() {
@@ -77,6 +82,8 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
         assertEquals(RoleTypeEnum.CUSTOM.getType(), roleDO.getType());
         assertEquals(CommonStatusEnum.ENABLE.getStatus(), roleDO.getStatus());
         assertEquals(DataScopeEnum.ALL.getScope(), roleDO.getDataScope());
+        // verify 发送刷新消息
+        verify(roleProducer).sendRoleRefreshMessage();
     }
 
     @Test
@@ -92,6 +99,8 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
         roleService.updateRole(reqVO);
         RoleDO dbRoleDO = roleMapper.selectById(reqVO.getId());
         assertPojoEquals(reqVO, dbRoleDO);
+        // verify 发送刷新消息
+        verify(roleProducer).sendRoleRefreshMessage();
     }
 
     @Test
@@ -109,6 +118,8 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
         // 断言
         RoleDO role = roleMapper.selectById(roleId);
         assertEquals(CommonStatusEnum.DISABLE.getStatus(), role.getStatus());
+        // verify 发送刷新消息
+        verify(roleProducer).sendRoleRefreshMessage();
     }
 
     @Test
@@ -125,6 +136,8 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
         assertNull(roleMapper.selectById(id));
         // verify 删除相关数据
         verify(permissionService).processRoleDeleted(id);
+        // verify 发送刷新消息
+        verify(roleProducer).sendRoleRefreshMessage();
     }
 
     @Test
@@ -236,6 +249,36 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
         assertEquals(1, pageResult.getTotal());
         assertEquals(1, pageResult.getList().size());
         assertPojoEquals(dbRole, pageResult.getList().get(0));
+    }
+
+    @Test
+    public void testGetRoleList() {
+        // mock 数据
+        RoleDO dbRole = randomPojo(RoleDO.class, o -> { // 等会查询到
+            o.setName("kayson");
+            o.setCode("kayson");
+            o.setStatus(CommonStatusEnum.ENABLE.getStatus());
+            o.setCreateTime(buildTime(2023, 5, 30));
+        });
+        roleMapper.insert(dbRole);
+        // 测试 name 不匹配
+        roleMapper.insert(cloneIgnoreId(dbRole, o -> o.setName("红薯")));
+        // 测试 code 不匹配
+        roleMapper.insert(cloneIgnoreId(dbRole, o -> o.setCode("hong")));
+        // 测试 createTime 不匹配
+        roleMapper.insert(cloneIgnoreId(dbRole, o -> o.setCreateTime(buildTime(2023, 5, 16))));
+        // 准备参数
+        RoleExportReqVO reqVO = new RoleExportReqVO();
+        reqVO.setName("kay");
+        reqVO.setCode("kay");
+        reqVO.setStatus(CommonStatusEnum.ENABLE.getStatus());
+        reqVO.setCreateTime(buildBetweenTime(2023, 5, 29, 2023, 5, 31));
+
+        // 调用
+        List<RoleDO> list = roleService.getRoleList(reqVO);
+        // 断言
+        assertEquals(1, list.size());
+        assertPojoEquals(dbRole, list.get(0));
     }
 
     @Test

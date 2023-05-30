@@ -2,13 +2,12 @@ package cn.zjh.kayson.module.system.service.user;
 
 import cn.hutool.core.util.RandomUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
+import cn.zjh.kayson.framework.common.exception.ServiceException;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserPageReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.user.*;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.UserPostDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
@@ -27,6 +26,7 @@ import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 
+import static cn.hutool.core.util.RandomUtil.randomEle;
 import static cn.zjh.kayson.framework.common.util.collection.SetUtils.asSet;
 import static cn.zjh.kayson.framework.common.util.date.LocalDateTimeUtils.buildBetweenTime;
 import static cn.zjh.kayson.framework.common.util.date.LocalDateTimeUtils.buildTime;
@@ -35,6 +35,7 @@ import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertPojoEqual
 import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertServiceException;
 import static cn.zjh.kayson.framework.test.core.util.RandomUtils.*;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
+import static org.assertj.core.util.Lists.newArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -173,6 +174,28 @@ public class AdminUserServiceImplTest extends BaseDbUnitTest {
         assertEquals(1, pageResult.getTotal());
         assertEquals(1, pageResult.getList().size());
         assertPojoEquals(user, pageResult.getList().get(0));
+    }
+
+    @Test
+    public void testGetUserList_export() {
+        // mock 数据
+        AdminUserDO dbUser = initGetUserPageData();
+        // 准备参数
+        UserExportReqVO reqVO = new UserExportReqVO();
+        reqVO.setUsername("kay");
+        reqVO.setMobile("18988");
+        reqVO.setStatus(CommonStatusEnum.ENABLE.getStatus());
+        reqVO.setCreateTime(buildBetweenTime(2023, 5, 21, 2023, 5, 31));
+        reqVO.setDeptId(1L); // 其中，1L 是 2L 的父部门
+        // mock 方法
+        List<DeptDO> deptList = newArrayList(randomPojo(DeptDO.class, o -> o.setId(2L)));
+        when(deptService.getDeptListByParentIdFromCache(eq(reqVO.getDeptId()), eq(true))).thenReturn(deptList);
+
+        // 调用
+        List<AdminUserDO> list = adminUserService.getUserList(reqVO);
+        // 断言
+        assertEquals(1, list.size());
+        assertPojoEquals(dbUser, list.get(0));
     }
 
     private AdminUserDO initGetUserPageData() {
@@ -323,6 +346,122 @@ public class AdminUserServiceImplTest extends BaseDbUnitTest {
         AdminUserDO userDO = adminUserService.getUserByUsername(username);
         // 断言
         assertPojoEquals(user, userDO);
+    }
+
+    /**
+     * 情况一，校验不通过，导致插入失败
+     */
+    @Test
+    public void testImportUserList_01() {
+        // 准备参数
+        UserImportExcelVO importUser = randomPojo(UserImportExcelVO.class);
+        // mock 方法，模拟失败
+        doThrow(new ServiceException(DEPT_NOT_FOUND)).when(deptService).validateDeptList(any());
+
+        // 调用
+        UserImportRespVO respVO = adminUserService.importUserList(newArrayList(importUser), true);
+        // 断言
+        assertEquals(0, respVO.getCreateUsernames().size());
+        assertEquals(0, respVO.getUpdateUsernames().size());
+        assertEquals(1, respVO.getFailureUsernames().size());
+        assertEquals(DEPT_NOT_FOUND.getMsg(), respVO.getFailureUsernames().get(importUser.getUsername()));
+    }
+
+    /**
+     * 情况二，不存在，进行插入
+     */
+    @Test
+    public void testImportUserList_02() {
+        // 准备参数
+        UserImportExcelVO importUser = randomPojo(UserImportExcelVO.class, o -> {
+            o.setStatus(randomCommonStatus()); // 保证 status 的范围
+            o.setSex(randomEle(SexEnum.values()).getSex()); // 保证 sex 的范围
+        });
+        // mock deptService 的方法
+        DeptDO dept = randomPojo(DeptDO.class, o -> {
+            o.setId(importUser.getDeptId());
+            o.setStatus(CommonStatusEnum.ENABLE.getStatus());
+        });
+        when(deptService.getDept(eq(dept.getId()))).thenReturn(dept);
+        // mock passwordEncoder 的方法
+        when(passwordEncoder.encode(eq("123456"))).thenReturn("java");
+
+        // 调用
+        UserImportRespVO respVO = adminUserService.importUserList(newArrayList(importUser), true);
+        // 断言
+        assertEquals(1, respVO.getCreateUsernames().size());
+        AdminUserDO user = adminUserMapper.selectByUsername(respVO.getCreateUsernames().get(0));
+        assertPojoEquals(importUser, user);
+        assertEquals("java", user.getPassword());
+        assertEquals(0, respVO.getUpdateUsernames().size());
+        assertEquals(0, respVO.getFailureUsernames().size());
+    }
+
+    /**
+     * 情况三，存在，但是不强制更新
+     */
+    @Test
+    public void testImportUserList_03() {
+        // mock 数据
+        AdminUserDO dbUser = randomPojo(AdminUserDO.class, o -> {
+            o.setStatus(randomCommonStatus()); // 保证 status 的范围
+            o.setSex(randomEle(SexEnum.values()).getSex()); // 保证 sex 的范围
+        });
+        adminUserMapper.insert(dbUser);
+        // 准备参数
+        UserImportExcelVO importUser = randomPojo(UserImportExcelVO.class, o -> {
+            o.setStatus(randomCommonStatus()); // 保证 status 的范围
+            o.setSex(randomEle(SexEnum.values()).getSex()); // 保证 sex 的范围
+            o.setUsername(dbUser.getUsername());
+        });
+        // mock deptService 的方法
+        DeptDO dept = randomPojo(DeptDO.class, o -> {
+            o.setId(importUser.getDeptId());
+            o.setStatus(CommonStatusEnum.ENABLE.getStatus());
+        });
+        when(deptService.getDept(eq(dept.getId()))).thenReturn(dept);
+
+        // 调用
+        UserImportRespVO respVO = adminUserService.importUserList(newArrayList(importUser), false);
+        // 断言
+        assertEquals(0, respVO.getCreateUsernames().size());
+        assertEquals(0, respVO.getUpdateUsernames().size());
+        assertEquals(1, respVO.getFailureUsernames().size());
+        assertEquals(USER_USERNAME_EXISTS.getMsg(), respVO.getFailureUsernames().get(importUser.getUsername()));
+    }
+
+    /**
+     * 情况四，存在，强制更新
+     */
+    @Test
+    public void testImportUserList_04() {
+        // mock 数据
+        AdminUserDO dbUser = randomPojo(AdminUserDO.class, o -> {
+            o.setStatus(randomCommonStatus()); // 保证 status 的范围
+            o.setSex(randomEle(SexEnum.values()).getSex()); // 保证 sex 的范围
+        });
+        adminUserMapper.insert(dbUser);
+        // 准备参数
+        UserImportExcelVO importUser = randomPojo(UserImportExcelVO.class, o -> {
+            o.setStatus(randomCommonStatus()); // 保证 status 的范围
+            o.setSex(randomEle(SexEnum.values()).getSex()); // 保证 sex 的范围
+            o.setUsername(dbUser.getUsername());
+        });
+        // mock deptService 的方法
+        DeptDO dept = randomPojo(DeptDO.class, o -> {
+            o.setId(importUser.getDeptId());
+            o.setStatus(CommonStatusEnum.ENABLE.getStatus());
+        });
+        when(deptService.getDept(eq(dept.getId()))).thenReturn(dept);
+
+        // 调用
+        UserImportRespVO respVO = adminUserService.importUserList(newArrayList(importUser), true);
+        // 断言
+        assertEquals(0, respVO.getCreateUsernames().size());
+        assertEquals(1, respVO.getUpdateUsernames().size());
+        AdminUserDO user = adminUserMapper.selectByUsername(respVO.getUpdateUsernames().get(0));
+        assertPojoEquals(importUser, user);
+        assertEquals(0, respVO.getFailureUsernames().size());
     }
 
     @Test
