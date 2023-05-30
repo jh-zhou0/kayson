@@ -2,6 +2,7 @@ package cn.zjh.kayson.module.system.service.permission;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RolePageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
@@ -120,4 +121,13 @@ public interface RoleService {
     default boolean hasAnySuperAdmin(Set<Long> ids) {
         return hasAnySuperAdmin(getRoleListFromCache(ids));
     }
+
+    /**
+     * 获得角色列表
+     *
+     * @param reqVO 列表查询
+     * @return 角色列表
+     */
+    List<RoleDO> getRoleList(RoleExportReqVO reqVO);
+    
 }

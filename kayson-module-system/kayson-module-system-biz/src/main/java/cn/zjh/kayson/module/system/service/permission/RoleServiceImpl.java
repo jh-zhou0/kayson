@@ -6,6 +6,7 @@ import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RolePageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleUpdateReqVO;
 import cn.zjh.kayson.module.system.convert.permission.RoleConvert;
@@ -176,6 +177,11 @@ public class RoleServiceImpl implements RoleService {
             return false;
         }
         return roleList.stream().anyMatch(roleDO -> RoleCodeEnum.isSuperAdmin(roleDO.getCode()));
+    }
+
+    @Override
+    public List<RoleDO> getRoleList(RoleExportReqVO reqVO) {
+        return roleMapper.selectList(reqVO);
     }
 
     @VisibleForTesting
