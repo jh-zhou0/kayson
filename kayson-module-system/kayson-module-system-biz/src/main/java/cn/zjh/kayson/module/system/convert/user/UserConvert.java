@@ -2,10 +2,7 @@ package cn.zjh.kayson.module.system.convert.user;
 
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileRespVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserPageItemRespVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserSimpleRespVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.user.*;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
@@ -39,4 +36,9 @@ public interface UserConvert {
     UserProfileRespVO.Dept convert02(DeptDO deptDO);
 
     AdminUserDO convert02(UserProfileUpdateReqVO reqVO);
+
+    UserExcelVO convert01(AdminUserDO bean);
+
+    AdminUserDO convert(UserImportExcelVO importUser);
+    
 }

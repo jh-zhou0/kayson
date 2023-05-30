@@ -4,9 +4,7 @@ import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserPageReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.user.*;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 
 import javax.validation.Valid;
@@ -159,5 +157,22 @@ public interface AdminUserService {
      * @return 用户列表
      */
     List<AdminUserDO> getUserList(Collection<Long> ids);
+
+    /**
+     * 获得用户列表
+     *
+     * @param reqVO 列表请求
+     * @return 用户列表
+     */
+    List<AdminUserDO> getUserList(UserExportReqVO reqVO);
+
+    /**
+     * 批量导入用户
+     *
+     * @param importUsers     导入用户列表
+     * @param isUpdateSupport 是否支持更新
+     * @return 导入结果
+     */
+    UserImportRespVO importUserList(List<UserImportExcelVO> importUsers, boolean isUpdateSupport);
     
 }

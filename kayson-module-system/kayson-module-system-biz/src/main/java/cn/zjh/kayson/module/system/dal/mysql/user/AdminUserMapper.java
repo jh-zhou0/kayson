@@ -3,6 +3,7 @@ package cn.zjh.kayson.module.system.dal.mysql.user;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.mybatis.core.mapper.BaseMapperX;
 import cn.zjh.kayson.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserPageReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import org.apache.ibatis.annotations.Mapper;
@@ -46,6 +47,15 @@ public interface AdminUserMapper extends BaseMapperX<AdminUserDO> {
 
     default List<AdminUserDO> selectListByNickname(String nickname) {
         return selectList(new LambdaQueryWrapperX<AdminUserDO>().like(AdminUserDO::getNickname, nickname));
+    }
+
+    default List<AdminUserDO> selectList(UserExportReqVO reqVO, Collection<Long> deptIds) {
+        return selectList(new LambdaQueryWrapperX<AdminUserDO>()
+                .likeIfPresent(AdminUserDO::getUsername, reqVO.getUsername())
+                .likeIfPresent(AdminUserDO::getMobile, reqVO.getMobile())
+                .eqIfPresent(AdminUserDO::getStatus, reqVO.getStatus())
+                .betweenIfPresent(AdminUserDO::getCreateTime, reqVO.getCreateTime())
+                .inIfPresent(AdminUserDO::getDeptId, deptIds));
     }
     
 }

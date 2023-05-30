@@ -3,13 +3,12 @@ package cn.zjh.kayson.module.system.service.user;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
+import cn.zjh.kayson.framework.common.exception.ServiceException;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserPageReqVO;
-import cn.zjh.kayson.module.system.controller.admin.user.vo.user.UserUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.user.vo.user.*;
 import cn.zjh.kayson.module.system.convert.user.UserConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.UserPostDO;
@@ -20,6 +19,7 @@ import cn.zjh.kayson.module.system.service.dept.DeptService;
 import cn.zjh.kayson.module.system.service.dept.PostService;
 import cn.zjh.kayson.module.system.service.permission.PermissionService;
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
@@ -42,6 +39,9 @@ import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
  */
 @Service
 public class AdminUserServiceImpl implements AdminUserService {
+
+    @Value("${kayson.user.init-password:123456}")
+    private String userInitPassword;
 
     @Resource
     private AdminUserMapper adminUserMapper;
@@ -215,6 +215,48 @@ public class AdminUserServiceImpl implements AdminUserService {
             return Collections.emptyList();
         }
         return adminUserMapper.selectBatchIds(ids);
+    }
+
+    @Override
+    public List<AdminUserDO> getUserList(UserExportReqVO reqVO) {
+        return adminUserMapper.selectList(reqVO, getDeptCondition(reqVO.getDeptId()));
+    }
+
+    @Override
+    public UserImportRespVO importUserList(List<UserImportExcelVO> importUsers, boolean isUpdateSupport) {
+        if (CollUtil.isEmpty(importUsers)) {
+            throw exception(USER_IMPORT_LIST_IS_EMPTY);
+        }
+        UserImportRespVO respVO = new UserImportRespVO().setCreateUsernames(new ArrayList<>())
+                .setUpdateUsernames(new ArrayList<>()).setFailureUsernames(new LinkedHashMap<>());
+        importUsers.forEach(importUser -> {
+            // 校验，判断是否存在不符合字段
+            try {
+                validateUserForCreateOrUpdate(null, null, importUser.getMobile(),
+                        importUser.getEmail(), importUser.getDeptId(), null);
+            } catch (ServiceException e) {
+                respVO.getFailureUsernames().put(importUser.getUsername(), e.getMessage());
+                return;
+            }
+            // 判断如果不存在，再进行插入
+            AdminUserDO existUser = adminUserMapper.selectByUsername(importUser.getUsername());
+            if (existUser == null) {
+                adminUserMapper.insert(UserConvert.INSTANCE.convert(importUser)
+                        .setPassword(encodePassword(userInitPassword)).setPostIds(new HashSet<>())); // 设置默认密码及空岗位编号数组
+                respVO.getCreateUsernames().add(importUser.getUsername());
+                return;
+            }
+            // 如果存在，判断是否允许更新
+            if (!isUpdateSupport) {
+                respVO.getFailureUsernames().put(importUser.getUsername(), USER_USERNAME_EXISTS.getMsg());
+                return;
+            }
+            AdminUserDO updateUser = UserConvert.INSTANCE.convert(importUser);
+            updateUser.setId(existUser.getId());
+            adminUserMapper.updateById(updateUser);
+            respVO.getUpdateUsernames().add(importUser.getUsername());
+        });
+        return respVO;
     }
 
     @VisibleForTesting
