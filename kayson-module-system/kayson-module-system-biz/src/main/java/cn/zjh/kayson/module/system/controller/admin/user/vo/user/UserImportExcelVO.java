@@ -4,7 +4,9 @@ import cn.zjh.kayson.framework.excel.core.annotations.DictFormat;
 import cn.zjh.kayson.framework.excel.core.convert.DictConvert;
 import cn.zjh.kayson.module.system.enums.DictTypeConstants;
 import com.alibaba.excel.annotation.ExcelProperty;
+import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * 用户 Excel 导入 VO
@@ -12,6 +14,8 @@ import lombok.Data;
  * @author zjh - kayson
  */
 @Data
+@Builder
+@Accessors(chain = false) // 设置 chain = false，避免用户导入有问题，原因：easyExcel使用了cglib，而cglib读取链式调用方法存在问题
 public class UserImportExcelVO {
 
     @ExcelProperty("登录名称")

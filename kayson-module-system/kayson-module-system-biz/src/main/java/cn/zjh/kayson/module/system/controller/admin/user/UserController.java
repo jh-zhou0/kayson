@@ -171,12 +171,12 @@ public class UserController {
     public void importTemplate(HttpServletResponse response) throws IOException {
         // 手动创建导出 demo
         List<UserImportExcelVO> list = Arrays.asList(
-                new UserImportExcelVO().setUsername("kayson").setDeptId(1L).setEmail("1525090646@qq.com")
-                        .setMobile("18988998899").setNickname("kayson").setStatus(CommonStatusEnum.ENABLE.getStatus())
-                        .setSex(SexEnum.MALE.getSex()),
-                new UserImportExcelVO().setUsername("user").setDeptId(2L).setEmail("1525090646@qq.com")
-                        .setMobile("18988998899").setNickname("user").setStatus(CommonStatusEnum.ENABLE.getStatus())
-                        .setSex(SexEnum.FEMALE.getSex())
+                UserImportExcelVO.builder().username("kayson").deptId(1L).email("1525090646@qq.com")
+                        .mobile("18988998899").nickname("kayson").status(CommonStatusEnum.ENABLE.getStatus())
+                        .sex(SexEnum.MALE.getSex()).build(),
+                UserImportExcelVO.builder().username("username").deptId(2L).email("1525090646@qq.com")
+                        .mobile("18988998899").nickname("nickname").status(CommonStatusEnum.ENABLE.getStatus())
+                        .sex(SexEnum.MALE.getSex()).build()
         );
 
         // 输出
