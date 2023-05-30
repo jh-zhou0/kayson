@@ -2,6 +2,8 @@ package cn.zjh.kayson.module.system.controller.admin.dict;
 
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.framework.excel.core.util.ExcelUtils;
+import cn.zjh.kayson.framework.operatelog.core.annotations.OperateLog;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.*;
 import cn.zjh.kayson.module.system.convert.dict.DictDataConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.dict.DictDataDO;
@@ -14,10 +16,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 
 import static cn.zjh.kayson.framework.common.pojo.CommonResult.success;
+import static cn.zjh.kayson.framework.operatelog.core.enums.OperateTypeEnum.EXPORT;
 
 /**
  * @author zjh - kayson
@@ -77,6 +82,17 @@ public class DictDataController {
     @PreAuthorize("@ss.hasPermission('system:dict:query')")
     public CommonResult<DictDataRespVO> getDictData(@RequestParam("id") Long id) {
         return success(DictDataConvert.INSTANCE.convert(dictDataService.getDictData(id)));
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "导出字典数据")
+    @PreAuthorize("@ss.hasPermission('system:dict:export')")
+    @OperateLog(type = EXPORT)
+    public void export(HttpServletResponse response, @Valid DictDataExportReqVO reqVO) throws IOException {
+        List<DictDataDO> dictDataList = dictDataService.getDictDataList(reqVO);
+        List<DictDataExcelVO> data = DictDataConvert.INSTANCE.convertList01(dictDataList);
+        // 输出
+        ExcelUtils.write(response, "字典数据.xls", "数据列表", DictDataExcelVO.class, data);
     }
     
 }

@@ -2,6 +2,7 @@ package cn.zjh.kayson.module.system.service.dict;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dict.DictDataDO;
@@ -85,5 +86,13 @@ public interface DictDataService {
      * @return 字典数据
      */
     DictDataDO parseDictData(String dictType, String label);
+
+    /**
+     * 获得字典数据列表
+     *
+     * @param reqVO 列表请求
+     * @return 字典数据列表
+     */
+    List<DictDataDO> getDictDataList(DictDataExportReqVO reqVO);
     
 }

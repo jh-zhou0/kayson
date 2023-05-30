@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.common.util.date.LocalDateTimeUtils;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypePageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeUpdateReqVO;
 import cn.zjh.kayson.module.system.convert.dict.DictTypeConvert;
@@ -83,6 +84,11 @@ public class DictTypeServiceImpl implements DictTypeService {
     @Override
     public List<DictTypeDO> getDictTypeList() {
         return dictTypeMapper.selectList();
+    }
+
+    @Override
+    public List<DictTypeDO> getDictTypeList(DictTypeExportReqVO reqVO) {
+        return dictTypeMapper.selectList(reqVO);
     }
 
     @VisibleForTesting

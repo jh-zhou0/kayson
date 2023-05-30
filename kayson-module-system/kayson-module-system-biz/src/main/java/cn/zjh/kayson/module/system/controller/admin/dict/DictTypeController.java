@@ -2,6 +2,8 @@ package cn.zjh.kayson.module.system.controller.admin.dict;
 
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
+import cn.zjh.kayson.framework.excel.core.util.ExcelUtils;
+import cn.zjh.kayson.framework.operatelog.core.annotations.OperateLog;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.*;
 import cn.zjh.kayson.module.system.convert.dict.DictTypeConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.dict.DictTypeDO;
@@ -14,10 +16,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 
 import static cn.zjh.kayson.framework.common.pojo.CommonResult.success;
+import static cn.zjh.kayson.framework.operatelog.core.enums.OperateTypeEnum.EXPORT;
 
 /**
  * @author zjh - kayson
@@ -77,6 +82,17 @@ public class DictTypeController {
     public CommonResult<List<DictTypeSimpleRespVO>> getSimpleDictTypeList() {
         List<DictTypeDO> list = dictTypeService.getDictTypeList();
         return success(DictTypeConvert.INSTANCE.convertList(list));
+    }
+
+    @Operation(summary = "导出数据类型")
+    @GetMapping("/export")
+    @PreAuthorize("@ss.hasPermission('system:dict:query')")
+    @OperateLog(type = EXPORT)
+    public void export(HttpServletResponse response, @Valid DictTypeExportReqVO reqVO) throws IOException {
+        List<DictTypeDO> list = dictTypeService.getDictTypeList(reqVO);
+        List<DictTypeExcelVO> data = DictTypeConvert.INSTANCE.convertList01(list);
+        // 输出
+        ExcelUtils.write(response, "字典类型.xls", "类型列表", DictTypeExcelVO.class, data);
     }
     
 }

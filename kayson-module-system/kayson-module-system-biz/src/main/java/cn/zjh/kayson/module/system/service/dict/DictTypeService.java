@@ -2,6 +2,7 @@ package cn.zjh.kayson.module.system.service.dict;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypePageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.type.DictTypeUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.dict.DictTypeDO;
@@ -67,6 +68,14 @@ public interface DictTypeService {
      * @return 字典类型列表
      */
     List<DictTypeDO> getDictTypeList();
+
+    /**
+     * 获得字典类型列表
+     *
+     * @param reqVO 列表请求
+     * @return 字典类型列表
+     */
+    List<DictTypeDO> getDictTypeList(DictTypeExportReqVO reqVO);
     
 }
  

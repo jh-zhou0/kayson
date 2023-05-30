@@ -3,6 +3,7 @@ package cn.zjh.kayson.module.system.service.dict;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataCreateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataPageReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataUpdateReqVO;
 import cn.zjh.kayson.module.system.convert.dict.DictDataConvert;
@@ -97,6 +98,13 @@ public class DictDataServiceImpl implements DictDataService {
     @Override
     public DictDataDO parseDictData(String dictType, String label) {
         return dictDataMapper.selectByDictTypeAndLabel(dictType, label);
+    }
+
+    @Override
+    public List<DictDataDO> getDictDataList(DictDataExportReqVO reqVO) {
+        List<DictDataDO> dictDataList = dictDataMapper.selectList(reqVO);
+        dictDataList.sort(COMPARATOR_TYPE_AND_SORT);
+        return dictDataList;
     }
 
     @VisibleForTesting

@@ -2,10 +2,7 @@ package cn.zjh.kayson.module.system.convert.dict;
 
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.module.system.api.dict.vo.DictDataRespDTO;
-import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataRespVO;
-import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataSimpleRespVO;
-import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.DictDataUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.dict.vo.data.*;
 import cn.zjh.kayson.module.system.dal.dataobject.dict.DictDataDO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -31,4 +28,6 @@ public interface DictDataConvert {
     DictDataRespVO convert(DictDataDO bean);
     
     DictDataRespDTO convert01(DictDataDO bean);
+
+    List<DictDataExcelVO> convertList01(List<DictDataDO> list);
 }
