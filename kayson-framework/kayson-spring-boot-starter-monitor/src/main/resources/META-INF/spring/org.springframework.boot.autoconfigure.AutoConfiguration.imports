@@ -1,0 +1,2 @@
+cn.zjh.kayson.framework.monitor.config.KaysonMetricsAutoConfiguration
+cn.zjh.kayson.framework.monitor.config.KaysonTracerAutoConfiguration

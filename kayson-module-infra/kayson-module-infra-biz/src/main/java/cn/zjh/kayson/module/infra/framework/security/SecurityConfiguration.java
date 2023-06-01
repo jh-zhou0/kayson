@@ -1,6 +1,7 @@
 package cn.zjh.kayson.module.infra.framework.security;
 
 import cn.zjh.kayson.framework.security.config.AuthorizeRequestsCustomizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +14,9 @@ import org.springframework.security.config.annotation.web.configurers.Expression
  */
 @Configuration(proxyBeanMethods = false, value = "infraSecurityConfiguration")
 public class SecurityConfiguration {
+
+    @Value("${spring.boot.admin.context-path:''}")
+    private String adminSeverContextPath;
     
     @Bean("infraAuthorizeRequestsCustomizer")
     public AuthorizeRequestsCustomizer authorizeRequestsCustomizer() {
@@ -28,6 +32,12 @@ public class SecurityConfiguration {
                         .antMatchers("/*/api-docs").anonymous();
                 // Druid 监控
                 registry.antMatchers("/druid/**").anonymous();
+                // Spring Boot Actuator 的安全配置
+                registry.antMatchers("/actuator").anonymous()
+                        .antMatchers("/actuator/**").anonymous();
+                // Spring Boot Admin Server 的安全配置
+                registry.antMatchers(adminSeverContextPath).anonymous()
+                        .antMatchers(adminSeverContextPath + "/**").anonymous();
             }
         };
     }
