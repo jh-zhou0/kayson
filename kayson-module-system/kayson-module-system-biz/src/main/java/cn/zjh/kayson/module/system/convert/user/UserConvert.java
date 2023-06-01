@@ -4,6 +4,7 @@ import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileR
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.*;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
+import cn.zjh.kayson.module.system.dal.dataobject.dept.PostDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import org.mapstruct.Mapper;
@@ -31,14 +32,16 @@ public interface UserConvert {
 
     UserProfileRespVO convert02(AdminUserDO user);
 
-    List<UserProfileRespVO.Role> convertList02(List<RoleDO> roleList);
+    List<UserProfileRespVO.Role> convertList02(List<RoleDO> list);
 
-    UserProfileRespVO.Dept convert02(DeptDO deptDO);
+    UserProfileRespVO.Dept convert02(DeptDO bean);
 
-    AdminUserDO convert02(UserProfileUpdateReqVO reqVO);
+    AdminUserDO convert02(UserProfileUpdateReqVO bean);
 
     UserExcelVO convert01(AdminUserDO bean);
 
-    AdminUserDO convert(UserImportExcelVO importUser);
+    AdminUserDO convert(UserImportExcelVO bean);
+
+    List<UserProfileRespVO.Post> convertList03(List<PostDO> list);
     
 }

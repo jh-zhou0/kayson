@@ -1,14 +1,17 @@
 package cn.zjh.kayson.module.system.controller.admin.user;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileRespVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.zjh.kayson.module.system.convert.user.UserConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
+import cn.zjh.kayson.module.system.dal.dataobject.dept.PostDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import cn.zjh.kayson.module.system.service.dept.DeptService;
+import cn.zjh.kayson.module.system.service.dept.PostService;
 import cn.zjh.kayson.module.system.service.permission.PermissionService;
 import cn.zjh.kayson.module.system.service.permission.RoleService;
 import cn.zjh.kayson.module.system.service.user.AdminUserService;
@@ -48,6 +51,9 @@ public class UserProfileController {
     
     @Resource
     private DeptService deptService;
+    
+    @Resource
+    private PostService postService;
 
     @GetMapping("/get")
     @Operation(summary = "获得登录用户信息")
@@ -66,7 +72,11 @@ public class UserProfileController {
             UserProfileRespVO.Dept dept = UserConvert.INSTANCE.convert02(deptDO);
             respVO.setDept(dept);
         }
-        // TODO: 获得社交用户信息
+        // 获得岗位信息
+        if (CollUtil.isNotEmpty(user.getPostIds())) {
+            List<PostDO> postList = postService.getPostList(user.getPostIds());
+            respVO.setPosts(UserConvert.INSTANCE.convertList03(postList));
+        }
         return success(respVO);
     }
 

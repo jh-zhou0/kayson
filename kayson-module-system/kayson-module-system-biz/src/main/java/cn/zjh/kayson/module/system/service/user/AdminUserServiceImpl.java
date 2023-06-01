@@ -1,11 +1,13 @@
 package cn.zjh.kayson.module.system.service.user;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.exception.ServiceException;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
+import cn.zjh.kayson.module.infra.api.FileApi;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.*;
@@ -60,6 +62,9 @@ public class AdminUserServiceImpl implements AdminUserService {
     
     @Resource
     private PasswordEncoder passwordEncoder;
+    
+    @Resource
+    private FileApi fileApi;
     
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -199,9 +204,16 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
-    public String updateUserAvatar(Long id, InputStream avatarFile) throws Exception {
-        // TODO: 更新用户头像
-        return null;
+    public String updateUserAvatar(Long id, InputStream avatarFile) {
+        validateUserExists(id);
+        // 存储文件
+        String avatar = fileApi.createFile(IoUtil.readBytes(avatarFile));
+        // 更新路径
+        AdminUserDO updateObj = new AdminUserDO();
+        updateObj.setId(id);
+        updateObj.setAvatar(avatar);
+        adminUserMapper.updateById(updateObj);
+        return avatar;
     }
 
     @Override
