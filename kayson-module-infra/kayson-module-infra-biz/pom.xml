@@ -30,6 +30,12 @@
             <version>${revision}</version>
         </dependency>
         
+        <!-- 业务组件 -->
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-spring-boot-starter-biz-operatelog</artifactId>
+        </dependency>
+        
         <!-- Web相关 -->
         <dependency>
             <groupId>cn.zjh.boot</groupId>

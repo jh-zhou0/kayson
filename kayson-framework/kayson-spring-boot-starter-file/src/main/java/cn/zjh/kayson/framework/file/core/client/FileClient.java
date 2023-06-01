@@ -19,6 +19,7 @@ public interface FileClient {
      *
      * @param content 文件流
      * @param path 相对路径
+     * @param type 文件类型
      * @return 完整路径，即 HTTP 访问地址
      * @throws Exception 上传文件时，抛出 Exception 异常
      */
