@@ -1,4 +1,4 @@
-package cn.zjh.kayson.framework.async.config;
+package cn.zjh.kayson.framework.quartz.config;
 
 import com.alibaba.ttl.TtlRunnable;
 import org.springframework.beans.BeansException;

@@ -1,1 +1,2 @@
-cn.zjh.kayson.framework.async.config.KaysonAsyncAutoConfiguration
+cn.zjh.kayson.framework.quartz.config.KaysonAsyncAutoConfiguration
+cn.zjh.kayson.framework.quartz.config.KaysonQuartzAutoConfiguration
