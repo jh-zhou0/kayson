@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static cn.hutool.core.util.RandomUtil.randomEle;
 import static cn.zjh.kayson.framework.common.util.date.LocalDateTimeUtils.buildBetweenTime;
 import static cn.zjh.kayson.framework.common.util.date.LocalDateTimeUtils.buildTime;
 import static cn.zjh.kayson.framework.common.util.object.ObjectUtils.cloneIgnoreId;
@@ -118,6 +119,26 @@ public class RoleServiceImplTest extends BaseDbUnitTest {
         // 断言
         RoleDO role = roleMapper.selectById(roleId);
         assertEquals(CommonStatusEnum.DISABLE.getStatus(), role.getStatus());
+        // verify 发送刷新消息
+        verify(roleProducer).sendRoleRefreshMessage();
+    }
+
+    @Test
+    public void testUpdateRoleDataScope_success() {
+        // mock 数据
+        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setType(RoleTypeEnum.CUSTOM.getType()));
+        roleMapper.insert(roleDO);
+        // 准备参数
+        Long id = roleDO.getId();
+        Integer dataScope = randomEle(DataScopeEnum.values()).getScope();
+        Set<Long> dataScopeRoleIds = randomSet(Long.class);
+
+        // 调用
+        roleService.updateRoleDataScope(id, dataScope, dataScopeRoleIds);
+        // 断言
+        RoleDO dbRoleDO = roleMapper.selectById(id);
+        assertEquals(dataScope, dbRoleDO.getDataScope());
+        assertEquals(dataScopeRoleIds, dbRoleDO.getDataScopeDeptIds());
         // verify 发送刷新消息
         verify(roleProducer).sendRoleRefreshMessage();
     }
