@@ -1,7 +1,10 @@
 package cn.zjh.kayson.module.system.enums.permission;
 
+import cn.zjh.kayson.framework.common.core.IntArrayValuable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.util.Arrays;
 
 /**
  * 数据范围枚举类
@@ -11,7 +14,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum DataScopeEnum {
+public enum DataScopeEnum implements IntArrayValuable {
 
     ALL(1), // 全部数据权限
 
@@ -21,9 +24,15 @@ public enum DataScopeEnum {
 
     SELF(5); // 仅本人数据权限
 
+    private static final int[] ARRAYS = Arrays.stream(values()).mapToInt(DataScopeEnum::getScope).toArray();
+
     /**
      * 范围
      */
     private final Integer scope;
-    
+
+    @Override
+    public int[] array() {
+        return ARRAYS;
+    }
 }

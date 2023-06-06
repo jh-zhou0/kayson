@@ -26,10 +26,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
@@ -107,6 +104,20 @@ public class RoleServiceImpl implements RoleService {
         validateRoleForUpdate(id);
         // 更新状态
         RoleDO updateObj = new RoleDO().setId(id).setStatus(status);
+        roleMapper.updateById(updateObj);
+        // 发送刷新消息
+        roleProducer.sendRoleRefreshMessage();
+    }
+
+    @Override
+    public void updateRoleDataScope(Long id, Integer dataScope, Set<Long> dataScopeDeptIds) {
+        // 校验是否可以更新
+        validateRoleForUpdate(id);
+        // 更新数据范围
+        RoleDO updateObj = new RoleDO();
+        updateObj.setId(id);
+        updateObj.setDataScope(dataScope);
+        updateObj.setDataScopeDeptIds(dataScopeDeptIds);
         roleMapper.updateById(updateObj);
         // 发送刷新消息
         roleProducer.sendRoleRefreshMessage();

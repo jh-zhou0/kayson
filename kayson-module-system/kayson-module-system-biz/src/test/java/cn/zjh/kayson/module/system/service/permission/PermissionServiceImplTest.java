@@ -1,13 +1,21 @@
 package cn.zjh.kayson.module.system.service.permission;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
+import cn.zjh.kayson.module.system.api.permission.vo.DeptDataPermissionRespDTO;
+import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleMenuDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.UserRoleDO;
+import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.RoleMenuMapper;
 import cn.zjh.kayson.module.system.dal.mysql.permission.UserRoleMapper;
+import cn.zjh.kayson.module.system.enums.permission.DataScopeEnum;
+import cn.zjh.kayson.module.system.mq.producer.permission.PermissionProducer;
+import cn.zjh.kayson.module.system.service.dept.DeptService;
+import cn.zjh.kayson.module.system.service.user.AdminUserService;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import org.junit.jupiter.api.Test;
@@ -23,10 +31,10 @@ import static cn.zjh.kayson.framework.test.core.util.RandomUtils.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -49,6 +57,15 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
     
     @MockBean
     private MenuService menuService;
+
+    @MockBean
+    private AdminUserService adminUserService;
+
+    @MockBean
+    private DeptService deptService;
+
+    @MockBean
+    private PermissionProducer permissionProducer;
 
     @Test
     void testInitLocalCacheForUserRole() {
@@ -254,6 +271,7 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
         assertEquals(200L, roleMenuList.get(0).getMenuId());
         assertEquals(1L, roleMenuList.get(1).getRoleId());
         assertEquals(300L, roleMenuList.get(1).getMenuId());
+        verify(permissionProducer).sendRoleMenuRefreshMessage();
     }
 
     @Test
@@ -276,6 +294,7 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
         assertEquals(200L, userRoleDOList.get(0).getRoleId());
         assertEquals(1L, userRoleDOList.get(1).getUserId());
         assertEquals(300L, userRoleDOList.get(1).getRoleId());
+        verify(permissionProducer).sendUserRoleRefreshMessage();
     }
 
     @Test
@@ -303,6 +322,8 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
         List<UserRoleDO> dbUserRoles = userRoleMapper.selectList();
         assertEquals(1, dbUserRoles.size());
         assertPojoEquals(dbUserRoles.get(0), userRoleDO02);
+        verify(permissionProducer).sendUserRoleRefreshMessage();
+        verify(permissionProducer).sendRoleMenuRefreshMessage();
     }
 
     @Test
@@ -321,6 +342,7 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
         List<RoleMenuDO> dbRoleMenus = roleMenuMapper.selectList();
         assertEquals(1, dbRoleMenus.size());
         assertPojoEquals(dbRoleMenus.get(0), roleMenuDO02);
+        verify(permissionProducer).sendRoleMenuRefreshMessage();
     }
 
     @Test
@@ -339,6 +361,7 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
         List<UserRoleDO> dbUserRoles = userRoleMapper.selectList();
         assertEquals(1, dbUserRoles.size());
         assertPojoEquals(dbUserRoles.get(0), userRoleDO02);
+        verify(permissionProducer).sendUserRoleRefreshMessage();
     }
 
     @Test
@@ -423,4 +446,144 @@ public class PermissionServiceImplTest extends BaseDbUnitTest {
         // 断言
         assertTrue(has);
     }
+
+    @Test
+    public void testAssignRoleDataScope() {
+        // 准备参数
+        Long roleId = 1L;
+        Integer dataScope = 2;
+        Set<Long> dataScopeDeptIds = asSet(10L, 20L);
+
+        // 调用
+        permissionService.assignRoleDataScope(roleId, dataScope, dataScopeDeptIds);
+        // 断言
+        verify(roleService).updateRoleDataScope(eq(roleId), eq(dataScope), eq(dataScopeDeptIds));
+    }
+
+    @Test
+    public void testGetDeptDataPermission_All() {
+        // 准备参数
+        Long userId = 1L;
+        // mock 用户的角色编号
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 2L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        // mock 获得用户的角色
+        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setDataScope(DataScopeEnum.ALL.getScope())
+                .setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleListFromCache(eq(singleton(2L)))).thenReturn(singletonList(roleDO));
+        when(roleService.getRoleFromCache(eq(2L))).thenReturn(roleDO);
+
+        // 调用
+        DeptDataPermissionRespDTO result = permissionService.getDeptDataPermission(userId);
+        // 断言
+        assertTrue(result.getAll());
+        assertFalse(result.getSelf());
+        assertTrue(CollUtil.isEmpty(result.getDeptIds()));
+    }
+
+    @Test
+    public void testGetDeptDataPermission_DeptCustom() {
+        // 准备参数
+        Long userId = 1L;
+        // mock 用户的角色编号
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 2L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        // mock 获得用户的角色
+        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setDataScope(DataScopeEnum.DEPT_CUSTOM.getScope())
+                .setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleListFromCache(eq(singleton(2L)))).thenReturn(singletonList(roleDO));
+        when(roleService.getRoleFromCache(eq(2L))).thenReturn(roleDO);
+        // mock 部门的返回
+        when(adminUserService.getUser(eq(1L))).thenReturn(new AdminUserDO().setDeptId(3L), null, null); // 最后返回 null 的目的，看看会不会重复调用
+
+        // 调用
+        DeptDataPermissionRespDTO result = permissionService.getDeptDataPermission(userId);
+        // 断言
+        assertFalse(result.getAll());
+        assertFalse(result.getSelf());
+        assertEquals(roleDO.getDataScopeDeptIds().size() + 1, result.getDeptIds().size());
+        assertTrue(CollUtil.containsAll(result.getDeptIds(), roleDO.getDataScopeDeptIds()));
+        assertTrue(CollUtil.contains(result.getDeptIds(), 3L));
+    }
+
+
+    @Test
+    public void testGetDeptDataPermission_DeptOnly() {
+        // 准备参数
+        Long userId = 1L;
+        // mock 用户的角色编号
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 2L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        // mock 获得用户的角色
+        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setDataScope(DataScopeEnum.DEPT_ONLY.getScope())
+                .setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleListFromCache(eq(singleton(2L)))).thenReturn(singletonList(roleDO));
+        when(roleService.getRoleFromCache(eq(2L))).thenReturn(roleDO);
+        // mock 部门的返回
+        when(adminUserService.getUser(eq(1L))).thenReturn(new AdminUserDO().setDeptId(3L), null, null); // 最后返回 null 的目的，看看会不会重复调用
+
+        // 调用
+        DeptDataPermissionRespDTO result = permissionService.getDeptDataPermission(userId);
+        // 断言
+        assertFalse(result.getAll());
+        assertFalse(result.getSelf());
+        assertEquals(1, result.getDeptIds().size());
+        assertTrue(CollUtil.contains(result.getDeptIds(), 3L));
+    }
+
+    @Test
+    public void testGetDeptDataPermission_DeptAndChild() {
+        // 准备参数
+        Long userId = 1L;
+        // mock 用户的角色编号
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 2L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        // mock 获得用户的角色
+        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setDataScope(DataScopeEnum.DEPT_AND_CHILD.getScope())
+                .setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleListFromCache(eq(singleton(2L)))).thenReturn(singletonList(roleDO));
+        when(roleService.getRoleFromCache(eq(2L))).thenReturn(roleDO);
+        // mock 部门的返回
+        when(adminUserService.getUser(eq(1L))).thenReturn(new AdminUserDO().setDeptId(3L), null, null); // 最后返回 null 的目的，看看会不会重复调用
+        // mock 方法（部门）
+        DeptDO deptDO = randomPojo(DeptDO.class);
+        when(deptService.getDeptListByParentIdFromCache(eq(3L), eq(true)))
+                .thenReturn(singletonList(deptDO));
+
+        // 调用
+        DeptDataPermissionRespDTO result = permissionService.getDeptDataPermission(userId);
+        // 断言
+        assertFalse(result.getAll());
+        assertFalse(result.getSelf());
+        assertEquals(2, result.getDeptIds().size());
+        assertTrue(CollUtil.contains(result.getDeptIds(), deptDO.getId()));
+        assertTrue(CollUtil.contains(result.getDeptIds(), 3L));
+    }
+
+    @Test
+    public void testGetDeptDataPermission_Self() {
+        // 准备参数
+        Long userId = 1L;
+        // mock 用户的角色编号
+        ImmutableMultimap.Builder<Long, Long> builder = ImmutableMultimap.builder();
+        Multimap<Long, Long> userRoleCache = builder.put(1L, 2L).build();
+        permissionService.setUserRoleCache(userRoleCache);
+        // mock 获得用户的角色
+        RoleDO roleDO = randomPojo(RoleDO.class, o -> o.setDataScope(DataScopeEnum.SELF.getScope())
+                .setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        when(roleService.getRoleListFromCache(eq(singleton(2L)))).thenReturn(singletonList(roleDO));
+        when(roleService.getRoleFromCache(eq(2L))).thenReturn(roleDO);
+
+        // 调用
+        DeptDataPermissionRespDTO result = permissionService.getDeptDataPermission(userId);
+        // 断言
+        assertFalse(result.getAll());
+        assertTrue(result.getSelf());
+        assertTrue(CollUtil.isEmpty(result.getDeptIds()));
+    }
+    
 }

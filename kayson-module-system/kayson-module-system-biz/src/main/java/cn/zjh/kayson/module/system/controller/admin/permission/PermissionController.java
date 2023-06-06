@@ -1,6 +1,7 @@
 package cn.zjh.kayson.module.system.controller.admin.permission;
 
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
+import cn.zjh.kayson.module.system.controller.admin.permission.vo.permission.PermissionAssignRoleDataScopeReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.permission.PermissionAssignRoleMenuReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.permission.PermissionAssignUserRoleReqVO;
 import cn.zjh.kayson.module.system.service.permission.PermissionService;
@@ -12,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 import java.util.Set;
 
 import static cn.zjh.kayson.framework.common.pojo.CommonResult.success;
@@ -60,6 +62,14 @@ public class PermissionController {
     @PreAuthorize("@ss.hasPermission('system:permission:assign-role-menu')")
     public CommonResult<Set<Long>> listRoleMenus(Long roleId) {
         return success(permissionService.getRoleMenuIds(roleId));
+    }
+
+    @PostMapping("/assign-role-data-scope")
+    @Operation(summary = "赋予角色数据权限")
+    @PreAuthorize("@ss.hasPermission('system:permission:assign-role-data-scope')")
+    public CommonResult<Boolean> assignRoleDataScope(@Valid @RequestBody PermissionAssignRoleDataScopeReqVO reqVO) {
+        permissionService.assignRoleDataScope(reqVO.getRoleId(), reqVO.getDataScope(), reqVO.getDataScopeDeptIds());
+        return success(true);
     }
     
 }

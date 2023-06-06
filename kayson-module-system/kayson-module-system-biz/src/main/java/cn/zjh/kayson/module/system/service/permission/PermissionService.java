@@ -85,6 +85,15 @@ public interface PermissionService {
                                           Collection<Integer> menusStatuses);
 
     /**
+     * 设置角色的数据权限
+     *
+     * @param roleId 角色编号
+     * @param dataScope 数据范围
+     * @param dataScopeDeptIds 部门编号数组
+     */
+    void assignRoleDataScope(Long roleId, Integer dataScope, Set<Long> dataScopeDeptIds);
+
+    /**
      * 处理用户删除时，删除关联授权数据
      *
      * @param userId 用户编号

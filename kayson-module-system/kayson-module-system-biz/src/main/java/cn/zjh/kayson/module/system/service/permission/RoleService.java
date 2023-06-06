@@ -50,6 +50,15 @@ public interface RoleService {
     void updateRoleStatus(Long id, Integer status);
 
     /**
+     * 设置角色的数据权限
+     *
+     * @param id 角色编号
+     * @param dataScope 数据范围
+     * @param dataScopeDeptIds 部门编号数组
+     */
+    void updateRoleDataScope(Long id, Integer dataScope, Set<Long> dataScopeDeptIds);
+
+    /**
      * 删除角色
      * 
      * @param id 角色编号

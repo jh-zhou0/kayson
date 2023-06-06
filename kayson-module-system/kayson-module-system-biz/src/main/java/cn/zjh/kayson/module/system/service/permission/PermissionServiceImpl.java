@@ -264,6 +264,11 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    public void assignRoleDataScope(Long roleId, Integer dataScope, Set<Long> dataScopeDeptIds) {
+        roleService.updateRoleDataScope(roleId, dataScope, dataScopeDeptIds);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void processUserDeleted(Long userId) {
         userRoleMapper.deleteListByUserId(userId);
@@ -396,7 +401,7 @@ public class PermissionServiceImpl implements PermissionService {
             // ⑤ 数据权限为 DEPT_AND_CHILD 时
             if (Objects.equals(role.getDataScope(), DataScopeEnum.DEPT_AND_CHILD.getScope())) {
                 List<DeptDO> depts = deptService.getDeptListByParentIdFromCache(userDeptIdCache.get(), true);
-                CollUtil.addAll(result.getDeptIds(), depts);
+                CollUtil.addAll(result.getDeptIds(), CollectionUtils.convertList(depts, DeptDO::getId));
                 // 添加本身部门编号
                 CollUtil.addAll(result.getDeptIds(), userDeptIdCache.get());
             }
