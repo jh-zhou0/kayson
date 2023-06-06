@@ -10,6 +10,7 @@ import cn.zjh.kayson.framework.common.enums.UserTypeEnum;
 import cn.zjh.kayson.framework.common.exception.enums.GlobalErrorCodeConstants;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.common.util.json.JsonUtils;
+import cn.zjh.kayson.framework.common.util.montor.TracerUtils;
 import cn.zjh.kayson.framework.common.util.servlet.ServletUtils;
 import cn.zjh.kayson.framework.operatelog.core.enums.OperateTypeEnum;
 import cn.zjh.kayson.framework.operatelog.core.service.OperateLog;
@@ -124,7 +125,7 @@ public class OperateLogAspect {
                       LocalDateTime startTime, Object result, Throwable exception) {
         OperateLog operateLogObj = new OperateLog();
         // 补全通用字段
-        operateLogObj.setTraceId(null); // TODO: SkyWalking链路追踪
+        operateLogObj.setTraceId(TracerUtils.getTraceId());
         operateLogObj.setStartTime(startTime);
         // 补充用户信息
         operateLogObj.setUserId(WebFrameworkUtils.getLoginUserId());

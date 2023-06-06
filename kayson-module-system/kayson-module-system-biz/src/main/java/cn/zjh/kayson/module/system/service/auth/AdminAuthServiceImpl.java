@@ -3,6 +3,7 @@ package cn.zjh.kayson.module.system.service.auth;
 import cn.hutool.core.util.ObjectUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.enums.UserTypeEnum;
+import cn.zjh.kayson.framework.common.util.montor.TracerUtils;
 import cn.zjh.kayson.framework.common.util.servlet.ServletUtils;
 import cn.zjh.kayson.framework.common.util.validation.ValidationUtils;
 import cn.zjh.kayson.module.system.api.logger.dto.LoginLogCreateReqDTO;
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.validation.Validator;
-
 import java.util.Objects;
 
 import static cn.zjh.kayson.framework.common.exception.util.ServiceExceptionUtils.exception;
@@ -143,7 +143,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     private void createLoginLog(Long userId, String username, LoginLogTypeEnum loginType, LoginResultEnum loginResult) {
         LoginLogCreateReqDTO reqDTO = new LoginLogCreateReqDTO()
                 .setLogType(loginType.getType())
-                .setTraceId(null) // TODO: SkyWalking链路追踪
+                .setTraceId(TracerUtils.getTraceId())
                 .setUserId(userId)
                 .setUserType(getUserType().getValue())
                 .setUsername(username)
@@ -160,7 +160,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     private void createLogoutLog(Long userId, Integer userType, Integer logoutType) {
         LoginLogCreateReqDTO reqDTO = new LoginLogCreateReqDTO()
                 .setLogType(logoutType)
-                .setTraceId(null)
+                .setTraceId(TracerUtils.getTraceId())
                 .setUserId(userId)
                 .setUserType(getUserType().getValue())
                 .setUsername(getUsername(userId))

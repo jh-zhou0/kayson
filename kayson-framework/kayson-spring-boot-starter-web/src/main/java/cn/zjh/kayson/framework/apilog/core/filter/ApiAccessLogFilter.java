@@ -10,6 +10,7 @@ import cn.zjh.kayson.framework.apilog.core.service.ApiAccessLogFrameworkService;
 import cn.zjh.kayson.framework.common.exception.enums.GlobalErrorCodeConstants;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.common.util.json.JsonUtils;
+import cn.zjh.kayson.framework.common.util.montor.TracerUtils;
 import cn.zjh.kayson.framework.common.util.servlet.ServletUtils;
 import cn.zjh.kayson.framework.web.config.WebProperties;
 import cn.zjh.kayson.framework.web.core.filter.ApiRequestFilter;
@@ -94,7 +95,7 @@ public class ApiAccessLogFilter extends ApiRequestFilter {
             accessLog.setResultMsg("");
         }
         // 设置其它字段
-        accessLog.setTraceId(null); // TODO: SkyWalking
+        accessLog.setTraceId(TracerUtils.getTraceId());
         accessLog.setApplicationName(applicationName);
         accessLog.setRequestUrl(request.getRequestURI());
         MapBuilder<String, Object> mapBuilder = MapUtil.builder();

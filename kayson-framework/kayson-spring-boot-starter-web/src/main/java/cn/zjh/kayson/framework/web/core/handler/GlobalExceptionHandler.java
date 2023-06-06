@@ -9,6 +9,7 @@ import cn.zjh.kayson.framework.apilog.core.service.ApiErrorLogFrameworkService;
 import cn.zjh.kayson.framework.common.exception.ServiceException;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.common.util.json.JsonUtils;
+import cn.zjh.kayson.framework.common.util.montor.TracerUtils;
 import cn.zjh.kayson.framework.common.util.servlet.ServletUtils;
 import cn.zjh.kayson.framework.web.core.util.WebFrameworkUtils;
 import lombok.AllArgsConstructor;
@@ -231,7 +232,7 @@ public class GlobalExceptionHandler {
         errorLog.setExceptionMethodName(stackTraceElement.getMethodName());
         errorLog.setExceptionLineNumber(stackTraceElement.getLineNumber());
         // 设置其它字段
-        errorLog.setTraceId("null"); // TODO: SkyWalking
+        errorLog.setTraceId(TracerUtils.getTraceId());
         errorLog.setApplicationName(applicationName);
         errorLog.setRequestUrl(request.getRequestURI());
         errorLog.setRequestMethod(request.getMethod());
