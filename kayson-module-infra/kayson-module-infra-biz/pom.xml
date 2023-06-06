@@ -65,6 +65,12 @@
             <artifactId>kayson-spring-boot-starter-mq</artifactId>
         </dependency>
 
+        <!-- 工具类相关 -->
+        <dependency>
+            <groupId>cn.zjh.boot</groupId>
+            <artifactId>kayson-spring-boot-starter-excel</artifactId>
+        </dependency>
+
         <!-- Test 测试相关 -->
         <dependency>
             <groupId>cn.zjh.boot</groupId>
