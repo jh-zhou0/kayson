@@ -39,7 +39,7 @@ public class JobLogServiceImpl implements JobLogService {
     @Async
     public void updateJobLogResultAsync(Long logId, LocalDateTime endTime, Integer duration, boolean success, String result) {
         try {
-            JobLogDO updateObj = JobLogDO.builder().jobId(logId).endTime(endTime).duration(duration)
+            JobLogDO updateObj = JobLogDO.builder().id(logId).endTime(endTime).duration(duration)
                     .status(success ? JobLogStatusEnum.SUCCESS.getStatus() : JobLogStatusEnum.FAILURE.getStatus())
                     .result(result).build();
             jobLogMapper.updateById(updateObj);
