@@ -19,6 +19,7 @@
         <module>kayson-spring-boot-starter-file</module>
         <module>kayson-spring-boot-starter-monitor</module>
         <module>kayson-spring-boot-starter-biz-data-permission</module>
+        <module>kayson-spring-boot-starter-protection</module>
     </modules>
     <parent>
         <artifactId>kayson</artifactId>
