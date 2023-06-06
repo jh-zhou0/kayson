@@ -5,14 +5,22 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.framework.common.util.collection.MapUtils;
+import cn.zjh.kayson.framework.common.util.json.JsonUtils;
+import cn.zjh.kayson.framework.datapermission.core.annotation.DataPermission;
+import cn.zjh.kayson.module.system.api.permission.vo.DeptDataPermissionRespDTO;
+import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleMenuDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.UserRoleDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.RoleMenuMapper;
 import cn.zjh.kayson.module.system.dal.mysql.permission.UserRoleMapper;
+import cn.zjh.kayson.module.system.enums.permission.DataScopeEnum;
 import cn.zjh.kayson.module.system.mq.producer.permission.PermissionProducer;
+import cn.zjh.kayson.module.system.service.dept.DeptService;
+import cn.zjh.kayson.module.system.service.user.AdminUserService;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -27,6 +35,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Supplier;
 
 import static java.util.Collections.singleton;
 
@@ -80,6 +89,12 @@ public class PermissionServiceImpl implements PermissionService {
     private RoleService roleService;
     @Resource
     private MenuService menuService;
+    
+    @Resource
+    private AdminUserService adminUserService;
+    
+    @Resource
+    private DeptService deptService;
     
     @Resource
     private PermissionProducer permissionProducer;
@@ -339,4 +354,61 @@ public class PermissionServiceImpl implements PermissionService {
         Set<String> userRoles = CollectionUtils.convertSet(roleList, RoleDO::getCode);
         return CollUtil.containsAny(userRoles, Sets.newHashSet(roles));
     }
+
+    @Override
+    @DataPermission(enable = false) // 关闭数据权限，不然就会出现递归获取数据权限的问题
+    public DeptDataPermissionRespDTO getDeptDataPermission(Long userId) {
+        DeptDataPermissionRespDTO result = new DeptDataPermissionRespDTO();
+        // 获得用户的角色
+        Set<Long> roleIds = getUserRoleIdsFromCache(userId, singleton(CommonStatusEnum.ENABLE.getStatus()));
+        // 角色为空，只能看自己
+        if (CollUtil.isEmpty(roleIds)) {
+            result.setSelf(true);
+            return result;
+        }
+        // 获得用户的部门编号的缓存，通过 Guava 的 Suppliers 惰性求值，有且仅有第一次发起 DB 的查询
+        Supplier<Long> userDeptIdCache = Suppliers.memoize(() -> adminUserService.getUser(userId).getDeptId());
+        // 遍历每个角色
+        List<RoleDO> roles = roleService.getRoleListFromCache(roleIds);
+        for (RoleDO role : roles) {
+            // ① 数据权限为空时，跳过
+            if (Objects.isNull(role.getDataScope())) {
+                continue;
+            }
+            // ② 数据权限为 ALL 时
+            if (Objects.equals(role.getDataScope(), DataScopeEnum.ALL.getScope())) {
+                result.setAll(true);
+                continue;
+            }
+            // ③ 数据权限为 DEPT_CUSTOM 时
+            if (Objects.equals(role.getDataScope(), DataScopeEnum.DEPT_CUSTOM.getScope())) {
+                CollUtil.addAll(result.getDeptIds(), role.getDataScopeDeptIds());
+                // 自定义可见部门时，保证可以看到自己所在的部门。否则，一些场景下可能会有问题。
+                // 例如说，登录时，基于 t_user 的 username 查询会可能被 dept_id 过滤掉
+                CollUtil.addAll(result.getDeptIds(), userDeptIdCache.get());
+                continue;
+            }
+            // ④ 数据权限为 DEPT_ONLY 时
+            if (Objects.equals(role.getDataScope(), DataScopeEnum.DEPT_ONLY.getScope())) {
+                CollUtil.addAll(result.getDeptIds(), userDeptIdCache.get());
+                continue;
+            }
+            // ⑤ 数据权限为 DEPT_AND_CHILD 时
+            if (Objects.equals(role.getDataScope(), DataScopeEnum.DEPT_AND_CHILD.getScope())) {
+                List<DeptDO> depts = deptService.getDeptListByParentIdFromCache(userDeptIdCache.get(), true);
+                CollUtil.addAll(result.getDeptIds(), depts);
+                // 添加本身部门编号
+                CollUtil.addAll(result.getDeptIds(), userDeptIdCache.get());
+            }
+            // ⑤ 数据权限为 SELF 时
+            if (Objects.equals(role.getDataScope(), DataScopeEnum.SELF.getScope())) {
+                result.setSelf(true);
+                continue;
+            }
+            // 未知情况，记录 error log
+            log.error("[getDeptDataPermission][LoginUser({}) role({}) 无法处理]", userId, JsonUtils.toJsonString(result));
+        }
+        return result;
+    }
+    
 }

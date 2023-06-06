@@ -1,5 +1,6 @@
 package cn.zjh.kayson.module.system.service.permission;
 
+import cn.zjh.kayson.module.system.api.permission.vo.DeptDataPermissionRespDTO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.RoleDO;
 import org.springframework.lang.Nullable;
@@ -120,5 +121,13 @@ public interface PermissionService {
      * @return 是否
      */
     boolean hasAnyRoles(Long userId, String... roles);
+
+    /**
+     * 获得登陆用户的部门数据权限
+     *
+     * @param userId 用户编号
+     * @return 部门数据权限
+     */
+    DeptDataPermissionRespDTO getDeptDataPermission(Long userId);
     
 }

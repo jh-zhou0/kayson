@@ -1,5 +1,6 @@
 package cn.zjh.kayson.module.system.api.permission;
 
+import cn.zjh.kayson.module.system.api.permission.vo.DeptDataPermissionRespDTO;
 import cn.zjh.kayson.module.system.service.permission.PermissionService;
 import org.springframework.stereotype.Service;
 
@@ -23,4 +24,10 @@ public class PermissionApiImpl implements PermissionApi {
     public boolean hasAnyRoles(Long userId, String... roles) {
         return permissionService.hasAnyRoles(userId, roles);
     }
+
+    @Override
+    public DeptDataPermissionRespDTO getDeptDataPermission(Long userId) {
+        return permissionService.getDeptDataPermission(userId);
+    }
+    
 }
