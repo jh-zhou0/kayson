@@ -1,5 +1,6 @@
 package cn.zjh.kayson.framework.web.core.util;
 
+import cn.hutool.core.util.NumberUtil;
 import cn.zjh.kayson.framework.common.enums.UserTypeEnum;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
 import cn.zjh.kayson.framework.web.config.WebProperties;
@@ -21,6 +22,8 @@ public class WebFrameworkUtils {
     private static final String REQUEST_ATTRIBUTE_LOGIN_USER_TYPE = "login_user_type";
 
     private static final String REQUEST_ATTRIBUTE_COMMON_RESULT = "common_result";
+
+    public static final String HEADER_TENANT_ID = "tenant-id";
 
     private static WebProperties properties;
     
@@ -101,6 +104,18 @@ public class WebFrameworkUtils {
 
     public static CommonResult<?> getCommonResult(ServletRequest request) {
         return (CommonResult<?>) request.getAttribute(REQUEST_ATTRIBUTE_COMMON_RESULT);
+    }
+
+    /**
+     * 获得租户编号，从 header 中
+     * 考虑到其它 framework 组件也会使用到租户编号，所以不得不放在 WebFrameworkUtils 统一提供
+     * 
+     * @param request 请求
+     * @return 租户编号
+     */
+    public static Long getTenantId(HttpServletRequest request) {
+        String tenantId = request.getHeader(HEADER_TENANT_ID);
+        return NumberUtil.isNumber(tenantId) ? Long.valueOf(tenantId) : null;
     }
     
 }
