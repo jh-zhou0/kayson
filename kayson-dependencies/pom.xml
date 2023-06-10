@@ -104,6 +104,11 @@
                 <artifactId>kayson-spring-boot-starter-biz-data-permission</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <dependency>
+                <groupId>cn.zjh.boot</groupId>
+                <artifactId>kayson-spring-boot-starter-biz-tenant</artifactId>
+                <version>${revision}</version>
+            </dependency>
 
             <!-- Spring 核心 -->
             <dependency>

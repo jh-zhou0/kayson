@@ -1,10 +1,8 @@
 package cn.zjh.kayson.module.system.controller.admin.permission;
 
+import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.CommonResult;
-import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuCreateReqVO;
-import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuListReqVO;
-import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuRespVO;
-import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuUpdateReqVO;
+import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.*;
 import cn.zjh.kayson.module.system.convert.permission.MenuConvert;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.service.permission.MenuService;
@@ -74,6 +72,19 @@ public class MenuController {
         List<MenuDO> list = menuService.getMenuList(reqVO);
         list.sort(Comparator.comparing(MenuDO::getSort));
         return success(MenuConvert.INSTANCE.convertList(list));
+    }
+
+    @GetMapping("/list-all-simple")
+    @Operation(summary = "获取菜单精简信息列表", description = "只包含被开启的菜单，用于【角色分配菜单】功能的选项。" +
+            "在多租户的场景下，会只返回租户所在套餐有的菜单")
+    public CommonResult<List<MenuSimpleRespVO>> getSimpleMenuList() {
+        // 获得菜单列表，只要开启状态的
+        MenuListReqVO reqVO = new MenuListReqVO();
+        reqVO.setStatus(CommonStatusEnum.ENABLE.getStatus());
+        List<MenuDO> list = menuService.getMenuListByTenant(reqVO);
+        // 排序后，返回给前端
+        list.sort(Comparator.comparing(MenuDO::getSort));
+        return success(MenuConvert.INSTANCE.convertList02(list));
     }
     
 }

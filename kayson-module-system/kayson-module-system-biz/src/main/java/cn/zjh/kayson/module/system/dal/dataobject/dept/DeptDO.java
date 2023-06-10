@@ -1,7 +1,7 @@
 package cn.zjh.kayson.module.system.dal.dataobject.dept;
 
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
-import cn.zjh.kayson.framework.mybatis.core.dataobject.BaseDO;
+import cn.zjh.kayson.framework.tenant.core.db.TenantBaseDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 @TableName("system_dept")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class DeptDO extends BaseDO {
+public class DeptDO extends TenantBaseDO {
 
     /**
      * 部门ID

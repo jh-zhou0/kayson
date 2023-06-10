@@ -1,8 +1,8 @@
 package cn.zjh.kayson.module.system.dal.dataobject.user;
 
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
-import cn.zjh.kayson.framework.mybatis.core.dataobject.BaseDO;
 import cn.zjh.kayson.framework.mybatis.core.type.JsonLongSetTypeHandler;
+import cn.zjh.kayson.framework.tenant.core.db.TenantBaseDO;
 import cn.zjh.kayson.module.system.enums.common.SexEnum;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -26,7 +26,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminUserDO extends BaseDO {
+public class AdminUserDO extends TenantBaseDO {
 
     /**
      * 用户ID

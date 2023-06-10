@@ -1,8 +1,8 @@
 package cn.zjh.kayson.module.system.dal.dataobject.permission;
 
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
-import cn.zjh.kayson.framework.mybatis.core.dataobject.BaseDO;
 import cn.zjh.kayson.framework.mybatis.core.type.JsonLongSetTypeHandler;
+import cn.zjh.kayson.framework.tenant.core.db.TenantBaseDO;
 import cn.zjh.kayson.module.system.enums.permission.DataScopeEnum;
 import cn.zjh.kayson.module.system.enums.permission.RoleTypeEnum;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -21,7 +21,7 @@ import java.util.Set;
 @TableName(value = "system_role", autoResultMap = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class RoleDO extends BaseDO {
+public class RoleDO extends TenantBaseDO {
 
     /**
      * 角色ID

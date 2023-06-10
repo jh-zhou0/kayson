@@ -2,6 +2,7 @@ package cn.zjh.kayson.module.system.convert.permission;
 
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuRespVO;
+import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuSimpleRespVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuUpdateReqVO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import org.mapstruct.Mapper;
@@ -24,5 +25,7 @@ public interface MenuConvert {
     MenuRespVO convert(MenuDO bean);
 
     List<MenuRespVO> convertList(List<MenuDO> list);
+
+    List<MenuSimpleRespVO> convertList02(List<MenuDO> list);
     
 }

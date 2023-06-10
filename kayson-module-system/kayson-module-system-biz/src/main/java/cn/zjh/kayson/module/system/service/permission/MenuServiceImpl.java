@@ -11,6 +11,7 @@ import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.MenuMapper;
 import cn.zjh.kayson.module.system.enums.permission.MenuTypeEnum;
 import cn.zjh.kayson.module.system.mq.producer.permission.MenuProducer;
+import cn.zjh.kayson.module.system.service.tenant.TenantService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -18,6 +19,7 @@ import com.google.common.collect.Multimap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -65,6 +67,10 @@ public class MenuServiceImpl implements MenuService {
     
     @Resource
     private PermissionService permissionService;
+
+    @Resource
+    @Lazy // 延迟，避免循环依赖报错
+    private TenantService tenantService;
     
     @Resource
     private MenuProducer menuProducer;
@@ -159,6 +165,14 @@ public class MenuServiceImpl implements MenuService {
             return Collections.emptyList();
         }
         return menuMapper.selectBatchIds(menuIds);
+    }
+
+    @Override
+    public List<MenuDO> getMenuListByTenant(MenuListReqVO reqVO) {
+        List<MenuDO> menuList = getMenuList(reqVO);
+        // 开启多租户的情况下，需要过滤掉未开通的菜单
+        tenantService.handleTenantMenu(menuIds -> menuList.removeIf(menu -> !CollUtil.contains(menuIds, menu.getId())));
+        return menuList;
     }
 
     @Override

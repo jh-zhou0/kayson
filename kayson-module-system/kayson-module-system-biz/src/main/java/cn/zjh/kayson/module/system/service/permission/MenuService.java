@@ -74,6 +74,15 @@ public interface MenuService {
     List<MenuDO> getMenuList(Collection<Long> menuIds);
 
     /**
+     * 基于租户，筛选菜单列表
+     * 注意，如果是系统租户，返回的还是全菜单
+     *
+     * @param reqVO 筛选条件请求 VO
+     * @return 菜单列表
+     */
+    List<MenuDO> getMenuListByTenant(MenuListReqVO reqVO);
+
+    /**
      * 获得所有菜单，从缓存中
      *
      * 任一参数为空时，则返回为空

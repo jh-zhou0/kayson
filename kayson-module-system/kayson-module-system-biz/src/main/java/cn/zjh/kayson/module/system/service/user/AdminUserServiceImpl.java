@@ -20,8 +20,10 @@ import cn.zjh.kayson.module.system.dal.mysql.user.AdminUserMapper;
 import cn.zjh.kayson.module.system.service.dept.DeptService;
 import cn.zjh.kayson.module.system.service.dept.PostService;
 import cn.zjh.kayson.module.system.service.permission.PermissionService;
+import cn.zjh.kayson.module.system.service.tenant.TenantService;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +63,10 @@ public class AdminUserServiceImpl implements AdminUserService {
     private PermissionService permissionService;
     
     @Resource
+    @Lazy
+    private TenantService tenantService;
+    
+    @Resource
     private PasswordEncoder passwordEncoder;
     
     @Resource
@@ -69,6 +75,13 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createUser(UserCreateReqVO reqVO) {
+        // 校验账户配合
+        tenantService.handleTenantInfo(tenant -> {
+            Long count = adminUserMapper.selectCount();
+            if (count >= tenant.getAccountCount()) {
+                throw exception(USER_COUNT_MAX, tenant.getAccountCount());
+            }
+        });
         // 校验正确性
         validateUserForCreateOrUpdate(null, reqVO.getUsername(), reqVO.getMobile(), reqVO.getEmail(),
                 reqVO.getDeptId(), reqVO.getPostIds());

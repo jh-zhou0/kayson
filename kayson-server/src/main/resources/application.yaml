@@ -78,3 +78,22 @@ kayson:
     email: 1525090646@qq.com
     license: MIT
     license-url: https://github.com/jh-zhou0/kayson
+  tenant:
+    enable: true
+    ignore-urls:
+      - /admin-api/system/tenant/get-id-by-name # 基于名字获取租户，不许带租户编号
+      - /admin-api/system/captcha/get # 获取图片验证码，和租户无关
+      - /admin-api/system/captcha/check # 校验图片验证码，和租户无关
+      - /admin-api/infra/file/*/get/** # 获取图片，和租户无关
+    ignore-tables:
+      - system_tenant
+      - system_tenant_package
+      - system_dict_data
+      - system_dict_type
+      - system_menu
+      - system_oauth2_client
+      - infra_file_config
+      - infra_file
+      - infra_file_content
+      - infra_job
+      - infra_job_log
