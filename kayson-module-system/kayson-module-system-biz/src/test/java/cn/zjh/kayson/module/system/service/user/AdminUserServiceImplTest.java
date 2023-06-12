@@ -5,11 +5,13 @@ import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.exception.ServiceException;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
+import cn.zjh.kayson.module.infra.api.FileApi;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.user.vo.user.*;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.UserPostDO;
+import cn.zjh.kayson.module.system.dal.dataobject.tenant.TenantDO;
 import cn.zjh.kayson.module.system.dal.dataobject.user.AdminUserDO;
 import cn.zjh.kayson.module.system.dal.mysql.dept.UserPostMapper;
 import cn.zjh.kayson.module.system.dal.mysql.user.AdminUserMapper;
@@ -17,15 +19,18 @@ import cn.zjh.kayson.module.system.enums.common.SexEnum;
 import cn.zjh.kayson.module.system.service.dept.DeptService;
 import cn.zjh.kayson.module.system.service.dept.PostService;
 import cn.zjh.kayson.module.system.service.permission.PermissionService;
+import cn.zjh.kayson.module.system.service.tenant.TenantService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayInputStream;
 import java.util.Collections;
 import java.util.List;
 
+import static cn.hutool.core.util.RandomUtil.randomBytes;
 import static cn.hutool.core.util.RandomUtil.randomEle;
 import static cn.zjh.kayson.framework.common.util.collection.SetUtils.asSet;
 import static cn.zjh.kayson.framework.common.util.date.LocalDateTimeUtils.buildBetweenTime;
@@ -61,7 +66,11 @@ public class AdminUserServiceImplTest extends BaseDbUnitTest {
     @MockBean
     private PermissionService permissionService;
     @MockBean
+    private TenantService tenantService;
+    @MockBean
     private PasswordEncoder passwordEncoder;
+    @MockBean
+    private FileApi fileApi;
 
     @Test
     void testCreatUser_success() {
@@ -73,6 +82,12 @@ public class AdminUserServiceImplTest extends BaseDbUnitTest {
         });
         // mock passwordEncoder 的方法
         when(passwordEncoder.encode(eq(reqVO.getPassword()))).thenReturn("kayson");
+        // mock 账户额度充足
+        TenantDO tenant = randomPojo(TenantDO.class, o -> o.setAccountCount(1));
+        doNothing().when(tenantService).handleTenantInfo(argThat(handler -> {
+            handler.handle(tenant);
+            return true;
+        }));
         
         // 调用
         Long userId = adminUserService.createUser(reqVO);
@@ -329,6 +344,29 @@ public class AdminUserServiceImplTest extends BaseDbUnitTest {
         // 断言
         AdminUserDO userDO = adminUserMapper.selectById(id);
         assertEquals("encode:new_password", userDO.getPassword());
+    }
+
+    @Test
+    public void testUpdateUserAvatar_success() {
+        // mock 数据
+        AdminUserDO dbUser = randomPojo(AdminUserDO.class, o -> {
+            o.setSex(RandomUtil.randomEle(SexEnum.values()).getSex());
+            o.setStatus(randomCommonStatus());
+        });
+        adminUserMapper.insert(dbUser);
+        // 准备参数
+        Long userId = dbUser.getId();
+        byte[] avatarFileBytes = randomBytes(10);
+        ByteArrayInputStream avatarFile = new ByteArrayInputStream(avatarFileBytes);
+        // mock 方法
+        String avatar = randomString();
+        when(fileApi.createFile(eq(avatarFileBytes))).thenReturn(avatar);
+
+        // 调用
+        adminUserService.updateUserAvatar(userId, avatarFile);
+        // 断言
+        AdminUserDO user = adminUserMapper.selectById(userId);
+        assertEquals(avatar, user.getAvatar());
     }
 
     @Test

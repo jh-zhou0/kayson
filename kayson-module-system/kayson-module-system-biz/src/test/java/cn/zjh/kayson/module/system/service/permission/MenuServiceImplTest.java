@@ -1,7 +1,6 @@
 package cn.zjh.kayson.module.system.service.permission;
 
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
-import cn.zjh.kayson.framework.common.util.collection.SetUtils;
 import cn.zjh.kayson.framework.test.core.ut.BaseDbUnitTest;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.menu.MenuListReqVO;
@@ -10,6 +9,7 @@ import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
 import cn.zjh.kayson.module.system.dal.mysql.permission.MenuMapper;
 import cn.zjh.kayson.module.system.enums.permission.MenuTypeEnum;
 import cn.zjh.kayson.module.system.mq.producer.permission.MenuProducer;
+import cn.zjh.kayson.module.system.service.tenant.TenantService;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import org.junit.jupiter.api.Test;
@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Import;
 import javax.annotation.Resource;
 import java.util.*;
 
+import static cn.zjh.kayson.framework.common.util.collection.SetUtils.asSet;
 import static cn.zjh.kayson.framework.common.util.object.ObjectUtils.cloneIgnoreId;
 import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertPojoEquals;
 import static cn.zjh.kayson.framework.test.core.util.AssertUtils.assertServiceException;
@@ -26,6 +27,8 @@ import static cn.zjh.kayson.framework.test.core.util.RandomUtils.*;
 import static cn.zjh.kayson.module.system.enums.ErrorCodeConstants.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -42,6 +45,9 @@ public class MenuServiceImplTest extends BaseDbUnitTest {
     
     @MockBean
     private PermissionService permissionService;
+
+    @MockBean
+    private TenantService tenantService;
     
     @MockBean
     private MenuProducer menuProducer;
@@ -231,6 +237,31 @@ public class MenuServiceImplTest extends BaseDbUnitTest {
     }
 
     @Test
+    public void testGetMenuListByTenant() {
+        // mock 数据
+        MenuDO menu100 = randomPojo(MenuDO.class, o -> o.setId(100L).setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        menuMapper.insert(menu100);
+        MenuDO menu101 = randomPojo(MenuDO.class, o -> o.setId(101L).setStatus(CommonStatusEnum.DISABLE.getStatus()));
+        menuMapper.insert(menu101);
+        MenuDO menu102 = randomPojo(MenuDO.class, o -> o.setId(102L).setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        menuMapper.insert(menu102);
+        // mock 过滤菜单
+        Set<Long> menuIds = asSet(100L, 101L);
+        doNothing().when(tenantService).handleTenantMenu(argThat(handler -> {
+            handler.handle(menuIds);
+            return true;
+        }));
+        // 准备参数
+        MenuListReqVO reqVO = new MenuListReqVO().setStatus(CommonStatusEnum.ENABLE.getStatus());
+
+        // 调用
+        List<MenuDO> result = menuService.getMenuListByTenant(reqVO);
+        // 断言
+        assertEquals(1, result.size());
+        assertPojoEquals(menu100, result.get(0));
+    }
+
+    @Test
     void testGetMenu() {
         // mock 数据
         MenuDO menu = randomPojo(MenuDO.class);
@@ -291,7 +322,7 @@ public class MenuServiceImplTest extends BaseDbUnitTest {
         menuService.setMenuCache(menuCache);
         
         // 准备参数
-        Set<Long> menuIds = SetUtils.asSet(1L, 3L, 4L);
+        Set<Long> menuIds = asSet(1L, 3L, 4L);
         Set<Integer> menuTypes = Collections.singleton(MenuTypeEnum.MENU.getType());
         Set<Integer> menuStatuses = Collections.singleton(CommonStatusEnum.ENABLE.getStatus());
         
