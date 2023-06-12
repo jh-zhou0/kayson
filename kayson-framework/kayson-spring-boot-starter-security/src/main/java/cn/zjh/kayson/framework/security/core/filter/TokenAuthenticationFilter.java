@@ -80,6 +80,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             return new LoginUser()
                     .setId(accessToken.getUserId())
                     .setUserType(accessToken.getUserType())
+                    .setTenantId(accessToken.getTenantId())
                     .setScopes(accessToken.getScopes());
         } catch (ServiceException serviceException) {
             // 校验 Token 不通过时，考虑到一些接口是无需登录的，所以直接返回 null 即可

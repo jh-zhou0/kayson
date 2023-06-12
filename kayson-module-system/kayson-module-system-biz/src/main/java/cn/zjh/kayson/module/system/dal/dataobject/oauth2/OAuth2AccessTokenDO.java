@@ -1,7 +1,7 @@
 package cn.zjh.kayson.module.system.dal.dataobject.oauth2;
 
 import cn.zjh.kayson.framework.common.enums.UserTypeEnum;
-import cn.zjh.kayson.framework.mybatis.core.dataobject.BaseDO;
+import cn.zjh.kayson.framework.tenant.core.db.TenantBaseDO;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -20,7 +20,7 @@ import java.util.List;
 @TableName(value = "system_oauth2_access_token", autoResultMap = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class OAuth2AccessTokenDO extends BaseDO {
+public class OAuth2AccessTokenDO extends TenantBaseDO {
 
     /**
      * 编号，数据库递增
