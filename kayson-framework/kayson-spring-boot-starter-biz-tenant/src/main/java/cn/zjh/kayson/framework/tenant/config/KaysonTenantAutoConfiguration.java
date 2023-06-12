@@ -12,9 +12,11 @@ import cn.zjh.kayson.framework.tenant.core.mq.TenantRedisMessageInterceptor;
 import cn.zjh.kayson.framework.tenant.core.redis.TenantRedisCacheManager;
 import cn.zjh.kayson.framework.tenant.core.security.TenantSecurityWebFilter;
 import cn.zjh.kayson.framework.tenant.core.service.TenantFrameworkService;
+import cn.zjh.kayson.framework.tenant.core.service.TenantFrameworkServiceImpl;
 import cn.zjh.kayson.framework.tenant.core.web.TenantContextWebFilter;
 import cn.zjh.kayson.framework.web.config.WebProperties;
 import cn.zjh.kayson.framework.web.core.handler.GlobalExceptionHandler;
+import cn.zjh.kayson.module.system.api.tenant.TenantApi;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import org.springframework.beans.BeansException;
@@ -40,6 +42,11 @@ import java.util.Objects;
 @ConditionalOnProperty(prefix = "kayson.tenant", value = "enable", matchIfMissing = true) // 允许使用 kayson.tenant.enable=false 禁用多租户
 @EnableConfigurationProperties(TenantProperties.class)
 public class KaysonTenantAutoConfiguration {
+
+    @Bean
+    public TenantFrameworkService tenantFrameworkService(TenantApi tenantApi) {
+        return new TenantFrameworkServiceImpl(tenantApi);
+    }
 
     // AOP
     @Bean

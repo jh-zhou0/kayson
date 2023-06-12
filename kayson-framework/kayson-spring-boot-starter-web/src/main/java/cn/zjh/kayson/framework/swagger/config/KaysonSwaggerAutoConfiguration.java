@@ -1,5 +1,6 @@
 package cn.zjh.kayson.framework.swagger.config;
 
+import cn.zjh.kayson.framework.web.core.util.WebFrameworkUtils;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
@@ -87,8 +88,22 @@ public class KaysonSwaggerAutoConfiguration {
                 .group(group)
                 .pathsToMatch("/admin-api/" + path + "/**", "/app-api" + path + "/**")
                 .addOperationCustomizer((operation, handlerMethod) -> operation
+                        .addParametersItem(buildTenantHeaderParameter())
                         .addParametersItem(buildSecurityHeaderParameter()))
                 .build();
+    }
+    
+    /**
+     * 构建 Tenant 租户编号请求头参数
+     *
+     * @return 多租户参数
+     */
+    private static Parameter buildTenantHeaderParameter() {
+        return new Parameter()
+                .name(WebFrameworkUtils.HEADER_TENANT_ID) // header 名
+                .description("租户编号") // 描述
+                .in(String.valueOf(SecurityScheme.In.HEADER)) // 请求 header
+                .schema(new StringSchema()._default("1").name(WebFrameworkUtils.HEADER_TENANT_ID)).description("租户编号");
     }
 
     /**

@@ -1,5 +1,9 @@
 package cn.zjh.kayson.module.system.api.tenant;
 
+import cn.zjh.kayson.module.system.service.tenant.TenantService;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -7,16 +11,20 @@ import java.util.List;
  * 
  * @author zjh - kayson
  */
+@Service
 public class TenantApiImpl implements TenantApi{
+    
+    @Resource
+    private TenantService tenantService;
     
     @Override
     public List<Long> getTenantIdList() {
-        return null;
+        return tenantService.getTenantIdList();
     }
 
     @Override
     public void validateTenant(Long id) {
-
+        tenantService.validateTenant(id);
     }
     
 }

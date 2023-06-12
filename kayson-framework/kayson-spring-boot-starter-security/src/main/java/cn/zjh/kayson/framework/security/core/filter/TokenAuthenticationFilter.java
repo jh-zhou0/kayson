@@ -50,7 +50,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                 LoginUser loginUser = buildLoginUserByToken(token, loginUserType);
                 // 1.2 模拟 Login 功能，方便日常开发调试
                 if (loginUser == null) {
-                    loginUser = mockLoginUser(token, loginUserType);
+                    loginUser = mockLoginUser(request, token, loginUserType);
                 }
                 // 2. 设置当前用户
                 if (loginUser != null) {
@@ -96,7 +96,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
      * @param userType 用户类型
      * @return 模拟的 LoginUser
      */
-    private LoginUser mockLoginUser(String token, Integer userType) {
+    private LoginUser mockLoginUser(HttpServletRequest request, String token, Integer userType) {
         if (!securityProperties.getMockEnable()) {
             return null;
         }
@@ -105,8 +105,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             return null;
         }
         // 构建模拟用户
-        // 构建模拟用户
         Long userId = Long.valueOf(token.substring(securityProperties.getMockSecret().length()));
-        return new LoginUser().setId(userId).setUserType(userType);
+        return new LoginUser().setId(userId).setUserType(userType)
+                .setTenantId(WebFrameworkUtils.getTenantId(request));
     }
 }
