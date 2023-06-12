@@ -75,7 +75,7 @@ public class TenantPackageServiceImpl implements TenantPackageService {
         // 校验正在使用
         validateTenantUsed(id);
         // 删除
-        tenantPackageMapper.selectById(id);
+        tenantPackageMapper.deleteById(id);
     }
 
     private void validateTenantUsed(Long id) {
