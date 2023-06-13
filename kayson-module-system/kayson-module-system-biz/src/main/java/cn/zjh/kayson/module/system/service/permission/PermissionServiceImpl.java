@@ -7,6 +7,8 @@ import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
 import cn.zjh.kayson.framework.common.util.collection.MapUtils;
 import cn.zjh.kayson.framework.common.util.json.JsonUtils;
 import cn.zjh.kayson.framework.datapermission.core.annotation.DataPermission;
+import cn.zjh.kayson.framework.tenant.core.aop.TenantIgnore;
+import cn.zjh.kayson.framework.tenant.core.util.TenantUtils;
 import cn.zjh.kayson.module.system.api.permission.vo.DeptDataPermissionRespDTO;
 import cn.zjh.kayson.module.system.dal.dataobject.dept.DeptDO;
 import cn.zjh.kayson.module.system.dal.dataobject.permission.MenuDO;
@@ -108,31 +110,37 @@ public class PermissionServiceImpl implements PermissionService {
 
     @VisibleForTesting
     void initLocalCacheForUserRole() {
-        // 加载数据
-        List<UserRoleDO> userRoleList = userRoleMapper.selectList();
-        log.info("[initLocalCacheForUserRole][缓存用户与角色，数量为:{}]", userRoleList.size());
-        
-        // 构建缓存
-        ImmutableMultimap.Builder<Long, Long> userRoleCacheBuilder = ImmutableMultimap.builder();
-        userRoleList.forEach(userRoleDO -> userRoleCacheBuilder.put(userRoleDO.getUserId(), userRoleDO.getRoleId()));
-        userRoleCache = userRoleCacheBuilder.build();
+        // 注意：忽略自动多租户，因为要全局初始化缓存
+        TenantUtils.executeIgnore(() -> {
+            // 加载数据
+            List<UserRoleDO> userRoleList = userRoleMapper.selectList();
+            log.info("[initLocalCacheForUserRole][缓存用户与角色，数量为:{}]", userRoleList.size());
+
+            // 构建缓存
+            ImmutableMultimap.Builder<Long, Long> userRoleCacheBuilder = ImmutableMultimap.builder();
+            userRoleList.forEach(userRoleDO -> userRoleCacheBuilder.put(userRoleDO.getUserId(), userRoleDO.getRoleId()));
+            userRoleCache = userRoleCacheBuilder.build();
+        });
     }
 
     @VisibleForTesting
     void initLocalCacheForRoleMenu() {
-        // 加载数据
-        List<RoleMenuDO> roleMenuList = roleMenuMapper.selectList();
-        log.info("[initLocalCacheForRoleMenu][缓存角色与菜单，数量为:{}]", roleMenuList.size());
-        
-        // 构建缓存
-        ImmutableMultimap.Builder<Long, Long> roleMenuCacheBuilder = ImmutableMultimap.builder();
-        ImmutableMultimap.Builder<Long, Long> menuRoleCacheBuilder = ImmutableMultimap.builder();
-        roleMenuList.forEach(roleMenuDO -> {
-            roleMenuCacheBuilder.put(roleMenuDO.getRoleId(), roleMenuDO.getMenuId());
-            menuRoleCacheBuilder.put(roleMenuDO.getMenuId(), roleMenuDO.getRoleId());
+        // 注意：忽略自动多租户，因为要全局初始化缓存
+        TenantUtils.executeIgnore(() -> {
+            // 加载数据
+            List<RoleMenuDO> roleMenuList = roleMenuMapper.selectList();
+            log.info("[initLocalCacheForRoleMenu][缓存角色与菜单，数量为:{}]", roleMenuList.size());
+
+            // 构建缓存
+            ImmutableMultimap.Builder<Long, Long> roleMenuCacheBuilder = ImmutableMultimap.builder();
+            ImmutableMultimap.Builder<Long, Long> menuRoleCacheBuilder = ImmutableMultimap.builder();
+            roleMenuList.forEach(roleMenuDO -> {
+                roleMenuCacheBuilder.put(roleMenuDO.getRoleId(), roleMenuDO.getMenuId());
+                menuRoleCacheBuilder.put(roleMenuDO.getMenuId(), roleMenuDO.getRoleId());
+            });
+            roleMenuCache = roleMenuCacheBuilder.build();
+            menuRoleCache = menuRoleCacheBuilder.build();
         });
-        roleMenuCache = roleMenuCacheBuilder.build();
-        menuRoleCache = menuRoleCacheBuilder.build();
     }
 
     @Override
@@ -362,6 +370,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @DataPermission(enable = false) // 关闭数据权限，不然就会出现递归获取数据权限的问题
+    @TenantIgnore // 忽略多租户的自动过滤。如果不忽略，会导致添加租户时，因为切换租户，导致获取不到 User。即使忽略，本身该方法不存在跨租户的操作，不会存在问题。
     public DeptDataPermissionRespDTO getDeptDataPermission(Long userId) {
         DeptDataPermissionRespDTO result = new DeptDataPermissionRespDTO();
         // 获得用户的角色

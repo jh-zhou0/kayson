@@ -3,6 +3,7 @@ package cn.zjh.kayson.module.system.service.dept;
 import cn.hutool.core.collection.CollUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
+import cn.zjh.kayson.framework.tenant.core.util.TenantUtils;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptListReqVO;
 import cn.zjh.kayson.module.system.controller.admin.dept.vo.dept.DeptUpdateReqVO;
@@ -64,19 +65,22 @@ public class DeptServiceImpl implements DeptService{
     @Override
     @PostConstruct
     public void initLocalCache() {
-        // 查询数据
-        List<DeptDO> deptList = deptMapper.selectList();
-        log.info("[initLocalCache][缓存部门，数量为:{}]", deptList.size());
-        
-        // 构建缓存
-        ImmutableMap.Builder<Long, DeptDO> deptCacheBuilder = ImmutableMap.builder();
-        ImmutableMultimap.Builder<Long, DeptDO> parentDeptCacheBuilder = ImmutableMultimap.builder();
-        deptList.forEach(deptDO -> {
-            deptCacheBuilder.put(deptDO.getId(), deptDO);
-            parentDeptCacheBuilder.put(deptDO.getParentId(), deptDO);
+        // 注意：忽略自动多租户，因为要全局初始化缓存
+        TenantUtils.executeIgnore(() -> {
+            // 查询数据
+            List<DeptDO> deptList = deptMapper.selectList();
+            log.info("[initLocalCache][缓存部门，数量为:{}]", deptList.size());
+
+            // 构建缓存
+            ImmutableMap.Builder<Long, DeptDO> deptCacheBuilder = ImmutableMap.builder();
+            ImmutableMultimap.Builder<Long, DeptDO> parentDeptCacheBuilder = ImmutableMultimap.builder();
+            deptList.forEach(deptDO -> {
+                deptCacheBuilder.put(deptDO.getId(), deptDO);
+                parentDeptCacheBuilder.put(deptDO.getParentId(), deptDO);
+            });
+            deptCache = deptCacheBuilder.build();
+            parentDeptCache = parentDeptCacheBuilder.build();
         });
-        deptCache = deptCacheBuilder.build();
-        parentDeptCache = parentDeptCacheBuilder.build();
     }
 
     @Override

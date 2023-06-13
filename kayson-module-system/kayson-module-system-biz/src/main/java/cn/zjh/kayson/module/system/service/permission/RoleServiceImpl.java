@@ -5,6 +5,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.zjh.kayson.framework.common.enums.CommonStatusEnum;
 import cn.zjh.kayson.framework.common.pojo.PageResult;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
+import cn.zjh.kayson.framework.tenant.core.util.TenantUtils;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleCreateReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RoleExportReqVO;
 import cn.zjh.kayson.module.system.controller.admin.permission.vo.role.RolePageReqVO;
@@ -62,12 +63,15 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @PostConstruct
     public void initLocalCache() {
-        // 第一步：查询数据
-        List<RoleDO> roleList = roleMapper.selectList();
-        log.info("[initLocalCache][缓存角色，数量为:{}]", roleList.size());
-        
-        // 第二步：构建缓存
-        roleCache = CollectionUtils.convertMap(roleList, RoleDO::getId);
+        // 注意：忽略自动多租户，因为要全局初始化缓存
+        TenantUtils.executeIgnore(() -> {
+            // 第一步：查询数据
+            List<RoleDO> roleList = roleMapper.selectList();
+            log.info("[initLocalCache][缓存角色，数量为:{}]", roleList.size());
+
+            // 第二步：构建缓存
+            roleCache = CollectionUtils.convertMap(roleList, RoleDO::getId);
+        });
     }
 
     @Override
