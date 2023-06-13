@@ -6,7 +6,6 @@ import cn.zjh.kayson.framework.web.core.filter.CacheRequestBodyFilter;
 import cn.zjh.kayson.framework.web.core.handler.GlobalExceptionHandler;
 import cn.zjh.kayson.framework.web.core.handler.GlobalResponseBodyHandler;
 import cn.zjh.kayson.framework.web.core.util.WebFrameworkUtils;
-import org.apache.catalina.filters.CorsFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -16,6 +15,7 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -88,7 +88,7 @@ public class KaysonWebAutoConfiguration implements WebMvcConfigurer {
         // 创建 UrlBasedCorsConfigurationSource 对象
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-        return createFilterBean(new CorsFilter(), WebFilterOrderEnum.CORS_FILTER);
+        return createFilterBean(new CorsFilter(source), WebFilterOrderEnum.CORS_FILTER);
     }
 
     /**
