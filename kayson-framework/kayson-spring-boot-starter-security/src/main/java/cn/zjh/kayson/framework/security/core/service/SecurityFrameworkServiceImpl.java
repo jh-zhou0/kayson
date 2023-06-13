@@ -1,7 +1,12 @@
 package cn.zjh.kayson.framework.security.core.service;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.zjh.kayson.framework.security.LoginUser;
+import cn.zjh.kayson.framework.security.core.util.SecurityFrameworkUtils;
 import cn.zjh.kayson.module.system.api.permission.PermissionApi;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Arrays;
 
 import static cn.zjh.kayson.framework.security.core.util.SecurityFrameworkUtils.getLoginUserId;
 
@@ -37,11 +42,15 @@ public class SecurityFrameworkServiceImpl implements SecurityFrameworkService{
 
     @Override
     public boolean hasScope(String scope) {
-        return true;
+        return hasAnyScopes(scope);
     }
 
     @Override
     public boolean hasAnyScopes(String... scope) {
-        return true;
+        LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            return false;
+        }
+        return CollUtil.containsAny(loginUser.getScopes(), Arrays.asList(scope));
     }
 }
