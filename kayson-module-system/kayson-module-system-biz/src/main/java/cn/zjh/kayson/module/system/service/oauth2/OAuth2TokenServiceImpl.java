@@ -5,6 +5,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.zjh.kayson.framework.common.exception.enums.GlobalErrorCodeConstants;
 import cn.zjh.kayson.framework.common.util.collection.CollectionUtils;
+import cn.zjh.kayson.framework.tenant.core.context.TenantContextHolder;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
 import cn.zjh.kayson.module.system.dal.dataobject.oauth2.OAuth2RefreshTokenDO;
@@ -128,6 +129,7 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
                 .setScopes(refreshTokenDO.getScopes())
                 .setRefreshToken(refreshTokenDO.getRefreshToken())
                 .setExpiresTime(LocalDateTime.now().plusSeconds(client.getAccessTokenValiditySeconds()));
+        accessTokenDO.setTenantId(TenantContextHolder.getTenantId()); // 手动设置租户编号，避免缓存到 Redis 的时候，无对应的租户编号
         oAuth2AccessTokenMapper.insert(accessTokenDO);
         // 记录到 Redis 中
         oAuth2AccessTokenRedisDAO.set(accessTokenDO);

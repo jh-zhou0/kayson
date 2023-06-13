@@ -12,7 +12,6 @@ import cn.zjh.kayson.framework.tenant.core.service.TenantFrameworkService;
 import cn.zjh.kayson.framework.web.config.WebProperties;
 import cn.zjh.kayson.framework.web.core.filter.ApiRequestFilter;
 import cn.zjh.kayson.framework.web.core.handler.GlobalExceptionHandler;
-import cn.zjh.kayson.framework.web.core.util.WebFrameworkUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
 
@@ -56,7 +55,7 @@ public class TenantSecurityWebFilter extends ApiRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        Long tenantId = WebFrameworkUtils.getTenantId(request);
+        Long tenantId = TenantContextHolder.getTenantId();
         LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
         
         // 1.如果是登陆的用户，校验是否有权限访问该租户，避免越权问题。
