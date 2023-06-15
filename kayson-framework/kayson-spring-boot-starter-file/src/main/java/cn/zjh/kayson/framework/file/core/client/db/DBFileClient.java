@@ -4,7 +4,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import cn.zjh.kayson.framework.file.core.client.AbstractFileClient;
 
 /**
- * 基于 DB 存储的文件客户端的配置类
+ * 基于 DB 存储的文件客户端
  * 
  * @author zjh - kayson
  */
